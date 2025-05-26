@@ -44,3 +44,8 @@ def rewrite_summary_with_gpt(levels):
         "summary_2": strip_html(match2.group(1)) if match2 else "Could not parse Level 2",
         "summary_1": strip_html(match3.group(1)) if match3 else "Could not parse Level 3"
     }
+if __name__ == "__main__":
+    print("🟡 DEBUG: Entered __main__ block")
+    port = int(os.environ.get("PORT", 5000))
+    print(f"✅ Clarity engine is running on port {port}...")
+    app.run(host="0.0.0.0", port=port)
