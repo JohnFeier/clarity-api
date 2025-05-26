@@ -1,6 +1,13 @@
+from http import client
 import re
 import os
+from flask import app
 from openai import OpenAI  # Only if you're still using GPT features
+import os
+
+print("🗂️ Render is running from:", os.getcwd())
+print("📁 Files here:")
+print(os.listdir())
 
 # .env loading logic has been removed for minimalist purity
 
