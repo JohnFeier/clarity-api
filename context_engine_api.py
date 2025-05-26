@@ -3,7 +3,7 @@ from context_engine import rewrite_summary_with_gpt
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)  # allows frontend to call this API from Firebase
+CORS(app)
 
 @app.route("/process", methods=["POST"])
 def process():
