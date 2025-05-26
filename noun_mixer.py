@@ -6,7 +6,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 try:
-    from noun_mixer import noun_mixer
+    from noun_mixer import noun_mixer # type: ignore
 except ModuleNotFoundError as e:
     raise ModuleNotFoundError("Could not find 'noun_mixer'. Make sure noun_mixer.py is in the same directory as this file.") from e
 
