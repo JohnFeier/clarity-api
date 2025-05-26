@@ -1,59 +1,36 @@
-import re
-import os
 from flask import Flask, request, jsonify
+import os
+import sys
 
+# Ensure the current directory is in the Python path for local imports
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from openai import OpenAI  # Only if you're still using GPT features
+try:
+    from noun_mixer import noun_mixer
+except ModuleNotFoundError as e:
+    raise ModuleNotFoundError("Could not find 'noun_mixer'. Make sure noun_mixer.py is in the same directory as this file.") from e
 
+app = Flask(__name__)
 
-print("🗂️ Render is running from:", os.getcwd())
-print("📁 Files here:")
-print(os.listdir())
+INFO_MESSAGE = (
+    "Note: For best results, input a list of nouns.\n"
+    "The engine works through circular adjacency, comparing each noun to its neighbor.\n"
+    "It returns only what is shared — commonalities only."
+)
 
-# .env loading logic has been removed for minimalist purity
+@app.route("/process", methods=["POST"])
+def process():
+    data = request.get_json()
+    variables = data.get("variables", [])
+    result = noun_mixer(variables)
+    return jsonify({
+        "message": INFO_MESSAGE,
+        "synthesis": result
+    })
 
-# --- OpenAI Client Initialization ---
-openai_api_key_from_env = os.environ.get("OPENAI_API_KEY")
-
-
-def strip_html(text):
-    if text:
-        text = re.sub(r'<[^>]+>', '', text)
-        return re.sub(r'\s+', ' ', text).strip()
-    return ""
-
-def generate_prompt(levels):
-    context = f"{levels['level1']}, {levels['level2']}, {levels['level3']}"
-    return (
-        "Please summarize the following context into three levels:\n"
-        "Level 1: 3-sentence version\n"
-        "Level 2: 2-sentence version\n"
-        "Level 3: 1-sentence version\n\n"
-        f"Context: {context}"
-    )
-
-def rewrite_summary_with_gpt(levels):
-    prompt = generate_prompt(levels)
-
-    response = client.chat.completions.create( # type: ignore
-        model="gpt-4o",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.7
-    )
-
-    content = response.choices[0].message.content.strip()
-
-    match1 = re.search(r"Level 1:\s*(.+?)\nLevel 2:", content, re.DOTALL)
-    match2 = re.search(r"Level 2:\s*(.+?)\nLevel 3:", content, re.DOTALL)
-    match3 = re.search(r"Level 3:\s*(.+)", content, re.DOTALL)
-
-    return {
-        "summary_3": strip_html(match1.group(1)) if match1 else "Could not parse Level 1",
-        "summary_2": strip_html(match2.group(1)) if match2 else "Could not parse Level 2",
-        "summary_1": strip_html(match3.group(1)) if match3 else "Could not parse Level 3"
-    }
 if __name__ == "__main__":
     print("🟡 DEBUG: Entered __main__ block")
     port = int(os.environ.get("PORT", 5000))
     print(f"✅ Clarity engine is running on port {port}...")
-    app.run(host="0.0.0.0", port=port) # type: ignore
+    print(f"DEBUG: Flask app object = {app}")
+    app.run(host="0.0.0.0", port=port)
