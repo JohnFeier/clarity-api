@@ -1,9 +1,10 @@
-from http import client
 import re
 import os
-from flask import app
+from flask import Flask, request, jsonify
+
+
 from openai import OpenAI  # Only if you're still using GPT features
-import os
+
 
 print("🗂️ Render is running from:", os.getcwd())
 print("📁 Files here:")
@@ -34,7 +35,7 @@ def generate_prompt(levels):
 def rewrite_summary_with_gpt(levels):
     prompt = generate_prompt(levels)
 
-    response = client.chat.completions.create(
+    response = client.chat.completions.create( # type: ignore
         model="gpt-4o",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.7
@@ -55,4 +56,4 @@ if __name__ == "__main__":
     print("🟡 DEBUG: Entered __main__ block")
     port = int(os.environ.get("PORT", 5000))
     print(f"✅ Clarity engine is running on port {port}...")
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port) # type: ignore
