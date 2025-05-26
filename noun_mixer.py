@@ -1,5 +1,14 @@
 from flask import Flask, request, jsonify
-from noun_mixer import noun_mixer
+import os
+import sys
+
+# Ensure the current directory is in the Python path for local imports
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+try:
+    from noun_mixer import noun_mixer
+except ModuleNotFoundError as e:
+    raise ModuleNotFoundError("Could not find 'noun_mixer'. Make sure noun_mixer.py is in the same directory as this file.") from e
 
 app = Flask(__name__)
 
@@ -20,5 +29,8 @@ def process():
     })
 
 if __name__ == "__main__":
-    print("\u2705 Clarity engine is running...")
-    app.run(debug=True)
+    print("🟡 DEBUG: Entered __main__ block")
+    port = int(os.environ.get("PORT", 5000))
+    print(f"✅ Clarity engine is running on port {port}...")
+    print(f"DEBUG: Flask app object = {app}")
+    app.run(host="0.0.0.0", port=port)
