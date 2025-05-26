@@ -5,11 +5,6 @@ import sys
 # Ensure the current directory is in the Python path for local imports
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-try:
-    from noun_mixer import noun_mixer
-except ModuleNotFoundError as e:
-    raise ModuleNotFoundError("Could not find 'noun_mixer'. Make sure noun_mixer.py is in the same directory as this file.") from e
-
 app = Flask(__name__)
 
 INFO_MESSAGE = (
