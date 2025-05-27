@@ -1,31 +1,43 @@
-from flask import Flask, request, jsonify
-import os
-import sys
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Clarity - Results</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="results-container">
+    <h2>Tier 1</h2>
+    <p id="tier1-result">Loading...</p>
+    <h2>Tier 2</h2>
+    <p id="tier2-result">Loading...</p>
+    <h2>Tier 3</h2>
+    <p id="tier3-result">Loading...</p>
+  </div>
 
-# Ensure the current directory is in the Python path for local imports
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const v1 = params.get('variable1');
+    const v2 = params.get('variable2');
+    const v3 = params.get('variable3');
 
-app = Flask(__name__)
-
-INFO_MESSAGE = (
-    "Note: For best results, input a list of nouns.\n"
-    "The engine works through circular adjacency, comparing each noun to its neighbor.\n"
-    "It returns only what is shared — commonalities only."
-)
-
-@app.route("/process", methods=["POST"])
-def process():
-    data = request.get_json()
-    variables = data.get("variables", [])
-    result = noun_mixer(variables)
-    return jsonify({
-        "message": INFO_MESSAGE,
-        "synthesis": result
+    fetch('https://clarity-do5e.onrender.com/process', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ variables: [v1, v2, v3] })
     })
-
-if __name__ == "__main__":
-    print("🟡 DEBUG: Entered __main__ block")
-    port = int(os.environ.get("PORT", 5000))
-    print(f"✅ Clarity engine is running on port {port}...")
-    print(f"DEBUG: Flask app object = {app}")
-    app.run(host="0.0.0.0", port=port)
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById('tier1-result').textContent = data.synthesis || "No synthesis result";
+      document.getElementById('tier2-result').textContent = data.message || "No system message";
+      document.getElementById('tier3-result').textContent = "✅";
+    })
+    .catch(err => {
+      console.error("Fetch error:", err);
+      document.getElementById('tier1-result').textContent = "Error loading results.";
+      document.getElementById('tier2-result').textContent = "Please try again later.";
+      document.getElementById('tier3-result').textContent = "";
+    });
+  </script>
+</body>
+</html>
