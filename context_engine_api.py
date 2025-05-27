@@ -3,7 +3,11 @@ from context_engine import rewrite_summary_with_gpt
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)
+
+from flask_cors import CORS
+
+CORS(app, origins=["https://clarity-28d13.web.app"])
+
 
 @app.route("/process", methods=["POST"])
 def process():
