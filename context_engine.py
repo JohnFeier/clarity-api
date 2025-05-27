@@ -1,43 +1,54 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Clarity - Results</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="results-container">
-    <h2>Tier 1</h2>
-    <p id="tier1-result">Loading...</p>
-    <h2>Tier 2</h2>
-    <p id="tier2-result">Loading...</p>
-    <h2>Tier 3</h2>
-    <p id="tier3-result">Loading...</p>
-  </div>
+# context_engine.py — clean version
 
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const v1 = params.get('variable1');
-    const v2 = params.get('variable2');
-    const v3 = params.get('variable3');
+import re
+import os
+from openai import OpenAI
+from dotenv import load_dotenv, find_dotenv
 
-    fetch('https://clarity-do5e.onrender.com/process', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ variables: [v1, v2, v3] })
-    })
-    .then(res => res.json())
-    .then(data => {
-      document.getElementById('tier1-result').textContent = data.synthesis || "No synthesis result";
-      document.getElementById('tier2-result').textContent = data.message || "No system message";
-      document.getElementById('tier3-result').textContent = "✅";
-    })
-    .catch(err => {
-      console.error("Fetch error:", err);
-      document.getElementById('tier1-result').textContent = "Error loading results.";
-      document.getElementById('tier2-result').textContent = "Please try again later.";
-      document.getElementById('tier3-result').textContent = "";
-    });
-  </script>
-</body>
-</html>
+# Load environment variables
+dotenv_path = find_dotenv(raise_error_if_not_found=False)
+if dotenv_path:
+    print(f"DEBUG: Loaded .env from {dotenv_path}")
+    load_dotenv(dotenv_path)
+else:
+    print("DEBUG: .env not found")
+
+api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
+    raise ValueError("OPENAI_API_KEY not found in environment")
+
+client = OpenAI(api_key=api_key)
+
+def generate_prompt(levels):
+    context = f"{levels['level1']}, {levels['level2']}, {levels['level3']}"
+    return (
+        "Please summarize the following context into three levels:\n"
+        "Level 1: 3-sentence version\n"
+        "Level 2: 2-sentence version\n"
+        "Level 3: 1-sentence version\n\n"
+        f"Context: {context}"
+    )
+
+def strip_html(text):
+    if text:
+        return re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', '', text)).strip()
+    return ""
+
+def rewrite_summary_with_gpt(levels):
+    prompt = generate_prompt(levels)
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.7
+    )
+    content = response.choices[0].message.content.strip()
+
+    match1 = re.search(r"Level 1:\s*(.+?)\nLevel 2:", content, re.DOTALL)
+    match2 = re.search(r"Level 2:\s*(.+?)\nLevel 3:", content, re.DOTALL)
+    match3 = re.search(r"Level 3:\s*(.+)", content, re.DOTALL)
+
+    return {
+        "summary_3": strip_html(match1.group(1)) if match1 else "Could not parse Level 1",
+        "summary_2": strip_html(match2.group(1)) if match2 else "Could not parse Level 2",
+        "summary_1": strip_html(match3.group(1)) if match3 else "Could not parse Level 3"
+    }
