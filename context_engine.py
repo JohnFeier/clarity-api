@@ -78,3 +78,12 @@ def rewrite_summary_with_gpt(levels):
         "summary_2": strip_html(match2.group(1)) if match2 else "Could not parse Level 2",
         "summary_1": strip_html(match3.group(1)) if match3 else "Could not parse Level 3"
     }
+def generate_deepinsight_statement(variables):
+    """
+    Generates a deep insight statement from a list of noun variables
+    using circular adjacency and commonality extraction.
+    """
+    raw = noun_mixer(variables)
+    return {"level1": raw, "level2": raw, "level3": raw}
+
+

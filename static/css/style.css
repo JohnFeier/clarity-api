@@ -1,0 +1,178 @@
+/* styles.css */
+:root {
+    --page-background-title: #F0FFF0; /* Light Mint (Honeydew) - REPLACE WITH YOUR CHOICE! */
+    --default-text-color: #333333;   /* Dark text for a light background (if any text appears) */
+
+    /* Variables for variables.html (black theme) - keep these separate */
+    --inner-page-background: #000000;
+    --inner-page-text-color: #FFFFFF;
+    --card-background: #282828;
+    --card-text-color: #E8E8E8;
+    --input-background: #3A3A3A;
+    --input-text-color: #FFFFFF;
+    --input-border-color: #505050;
+    --button-background: #93f5c4;
+    --button-text-color: #000000;
+    --button-hover-background: #7ADFBF;
+}
+
+/* Generic Body styles - minimal, page-specific classes will override */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+{<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">}
+
+*, *::before, *::after {
+    box-sizing: inherit;
+}
+
+/* === STYLES SPECIFIC TO INDEX.HTML (Title Page - White Placard on Light Mint) === */
+body.title-page-body {
+    background-color: var(--page-background-title); /* Your chosen light mint */
+    color: var(--default-text-color); /* General text color for this page */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.placard-container { /* Holds your BigDarkClarity_placard.jpg */
+    /* --- ADJUST THESE TO CONTROL THE SIZE OF YOUR WHITE PLACARD --- */
+    /* --- AND THUS THE THICKNESS OF THE MINT BORDER --- */
+    width: 70vmin;  /* Example: Placard takes 70% of the shorter screen dimension */
+    height: 70vmin; /* Example: Making it squarish */
+    
+    /* Optional: Max pixel dimensions if you don't want it too huge on big screens */
+    /* max-width: 800px; */
+    /* max-height: 600px; */
+
+    display: flex; /* To center the image perfectly within this container */
+    justify-content: center;
+    align-items: center;
+    
+    /* Optional: Add a subtle shadow to make the placard "pop" off the mint field */
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1); 
+}
+
+#main-placard-image { /* This is your BigDarkClarity_placard.jpg */
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* Fits image within container, keeps aspect ratio */
+    /* If your image itself doesn't have rounded corners and you want them: */
+    /* border-radius: 12px; */
+}
+
+
+/* === STYLES FOR VARIABLES.HTML (and other inner pages - Black Theme) === */
+body.inner-page-body {
+    background-color: var(--inner-page-background); /* Black */
+    color: var(--inner-page-text-color);       /* White text */
+    /* padding-top: 80px; /* Example if header is fixed and approx 80px tall */
+}
+
+.app-header { /* For variables.html banner */
+    width: 100%;
+    padding: 15px 0;
+    text-align: center;
+    background-color: var(--inner-page-background); /* Header matches inner page bg */
+}
+
+#app-logo-banner { /* This is LittleDarkClarity.png (transparent banner) */
+    height: 50px; /* << ADJUST THIS for banner size */
+    max-width: 90%;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* ... (The rest of your styles for .content-container, .variable-entry-card, etc. for variables.html
+      using --card-background, --card-text-color, etc. from response #88 or #92 should follow here) ... */
+/* Make sure these styles use the correct variables for the dark theme */
+.content-container {
+    padding: 25px; width: 100%; max-width: 650px;
+    margin: 20px auto 0 auto; display: flex; flex-direction: column; gap: 35px;
+}
+.variable-entry-card, .results-card {
+    background-color: var(--card-background); color: var(--card-text-color);
+    padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+.variable-entry-card h2, .results-card h2 {
+    margin-top: 0; border-bottom: 1px solid var(--input-border-color);
+    padding-bottom: 15px; margin-bottom: 25px; font-size: 1.4rem; font-weight: 600; color: #FFFFFF;
+}
+.input-field { margin-bottom: 20px; }
+.input-field label { display: block; margin-bottom: 8px; font-size: 0.95rem; font-weight: 500; }
+.input-field input[type="text"] {
+    width: 100%; padding: 12px 15px;
+    background-color: var(--input-background); color: var(--input-text-color);
+    border: 1px solid var(--input-border-color); border-radius: 6px; font-size: 1rem;
+}
+#activation-button {
+    display: block; width: 100%; padding: 14px; margin-top: 25px;
+    background-color: var(--button-background); color: var(--button-text-color);
+    border: none; border-radius: 6px; font-size: 1.15rem; font-weight: bold;
+    cursor: pointer; transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+}
+#activation-button:hover { background-color: var(--button-hover-background); transform: translateY(-1px); }
+#activation-button:active { transform: translateY(0px); }
+.results-tier {
+    padding: 15px; border: 1px solid var(--input-border-color);
+    border-radius: 6px; margin-bottom: 15px;
+    background-color: var(--input-background);
+}
+.results-tier p { margin: 0; line-height: 1.5; }
+
+#small-clarity-banner { /* In variables.html: <img src="DarkClarity-01.png" id="small-clarity-banner"> */
+    /* --- ADJUST THIS FOR BANNER SIZE --- */
+    height: 60px;  /* Example: Try 40px, 50px, 70px, 80px etc. */
+    max-width: 90%; 
+    display: inline-block; 
+    vertical-align: middle; 
+}
+
+/* === Styles for variables.html content (ensure these are present) === */
+.content-container {
+    padding: 25px;
+    width: 100%;
+    max-width: 650px;
+    margin: 20px auto 0 auto; 
+    display: flex;
+    flex-direction: column;
+    gap: 35px;
+}
+
+/* ... (And all your other styles for .variable-entry-card, .results-card, 
+      .input-field, #activation-button, .results-tier from response #88) ... */
+/* These should be fine as they were: */
+.variable-entry-card, .results-card {
+    background-color: var(--card-background); color: var(--card-text-color);
+    padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+.variable-entry-card h2, .results-card h2 {
+    margin-top: 0; border-bottom: 1px solid var(--input-border-color);
+    padding-bottom: 15px; margin-bottom: 25px; font-size: 1.4rem; font-weight: 600; color: #FFFFFF;
+}
+.input-field { margin-bottom: 20px; }
+.input-field label { display: block; margin-bottom: 8px; font-size: 0.95rem; font-weight: 500; }
+.input-field input[type="text"] {
+    width: 100%; padding: 12px 15px;
+    background-color: var(--input-background); color: var(--input-text-color);
+    border: 1px solid var(--input-border-color); border-radius: 6px; font-size: 1rem;
+}
+#activation-button {
+    display: block; width: 100%; padding: 14px; margin-top: 25px;
+    background-color: var(--button-background); color: var(--button-text-color);
+    border: none; border-radius: 6px; font-size: 1.15rem; font-weight: bold;
+    cursor: pointer; transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+}
+#activation-button:hover { background-color: var(--button-hover-background); transform: translateY(-1px); }
+#activation-button:active { transform: translateY(0px); }
+.results-tier {
+    padding: 15px; border: 1px solid var(--input-border-color);
+    border-radius: 6px; margin-bottom: 15px;
+    background-color: var(--input-background);
+}
+.results-tier p { margin: 0; line-height: 1.5; }
