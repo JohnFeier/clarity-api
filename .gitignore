@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Flask environment
+.env
+instance/
+*.sqlite3
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# OS stuff
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Compiled files
+*.exe
+*.out
+*.class
+
+# Node or other unused directories (just in case)
+node_modules/
+
