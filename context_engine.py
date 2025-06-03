@@ -85,6 +85,7 @@ def generate_deepinsight_statement(variables):
     """
     raw = noun_mixer(variables)
     return {"level1": raw, "level2": raw, "level3": raw}
+
 from flask import Flask, request, jsonify
 from noun_mixer import assign_categories
 
