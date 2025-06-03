@@ -85,5 +85,22 @@ def generate_deepinsight_statement(variables):
     """
     raw = noun_mixer(variables)
     return {"level1": raw, "level2": raw, "level3": raw}
+from flask import Flask, request, jsonify
+from noun_mixer import assign_categories
+
+app = Flask(__name__)
+
+@app.route('/process', methods=['POST'])
+def process_input():
+    data = request.get_json()
+    input_nouns = data.get('nouns', [])
+    clarity_mode = data.get('clarity_mode', 'tiered')
+
+    if not input_nouns or not isinstance(input_nouns, list):
+        return jsonify({'error': 'Please provide a list of input nouns.'}), 400
+
+    # Placeholder logic — update to call your insight generation functions
+    results = generate_deepinsight_statement(input_nouns)
+    return jsonify(results)
 
 
