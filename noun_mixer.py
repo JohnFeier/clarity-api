@@ -1,54 +1,35 @@
-from flask import Flask, request, jsonify
-import os
-
-app = Flask(__name__)
-
-INFO_MESSAGE = (
-    "Note: For best results, input a list of nouns.\n"
-    "The engine works through circular adjacency, comparing each noun to its neighbor.\n"
-    "It returns only what is shared — commonalities only."
-)
-
-def noun_mixer(variables):
+def assign_categories(nouns):
     """
-    Given a list of variables (nouns), compares each adjacent pair
-    and returns a synthesized result based only on commonalities.
+    Assign each noun to one of 13 inner life categories.
+    Returns a list of tuples: (category, noun)
     """
-    if not isinstance(variables, list) or len(variables) < 2:
-        return "Please provide at least two variables."
+    category_map = {
+        "Emotion": {"grief", "joy", "anger", "fear", "love", "shame", "surprise", "sadness"},
+        "Desire": {"ambition", "hunger", "lust", "hope", "yearning", "craving", "curiosity"},
+        "Sensation": {"pain", "pleasure", "warmth", "cold", "tingle", "itch", "sight", "sound"},
+        "Imagination": {"fantasy", "dream", "vision", "scenario", "creativity", "fiction"},
+        "Intuition": {"gut", "hunch", "instinct", "premonition", "sense", "knowing"},
+        "Will": {"determination", "drive", "resolve", "intention", "discipline", "motivation"},
+        "Attention": {"focus", "concentration", "awareness", "presence", "alertness"},
+        "Thought": {"idea", "logic", "concept", "belief", "analysis", "reflection"},
+        "Memory": {"recall", "past", "event", "experience", "recollection", "nostalgia"},
+        "Language": {"word", "speech", "communication", "syntax", "narrative", "expression"},
+        "Identity": {"self", "ego", "persona", "character", "role", "reputation"},
+        "Decision-making": {"choice", "selection", "judgment", "preference", "option"},
+        "Problem-solving": {"solution", "strategy", "plan", "approach", "method", "fix"}
+    }
 
-    result = []
-    for i in range(len(variables)):
-        a = variables[i]
-        b = variables[(i + 1) % len(variables)]  # Circular adjacency
-        common = find_common_substring(a, b)
-        if common:
-            result.append(common)
+    results = []
 
-    return " ".join(result) if result else "No commonalities found."
+    for noun in nouns:
+        normalized = noun.strip().lower()
+        assigned = False
+        for category, keywords in category_map.items():
+            if normalized in keywords:
+                results.append((category, noun))
+                assigned = True
+                break
+        if not assigned:
+            results.append(("Uncategorized", noun))  # fallback for unknown terms
 
-def find_common_substring(a, b):
-    longest = ""
-    for i in range(len(a)):
-        for j in range(i + 1, len(a) + 1):
-            substr = a[i:j]
-            if substr in b and len(substr) > len(longest):
-                longest = substr
-    return longest.strip()
-
-@app.route("/process", methods=["POST"])
-def process():
-    data = request.get_json()
-    variables = data.get("variables", [])
-    result = noun_mixer(variables)
-    return jsonify({
-        "message": INFO_MESSAGE,
-        "synthesis": result
-    })
-
-if __name__ == "__main__":
-    print("🟡 DEBUG: Entered __main__ block")
-    port = int(os.environ.get("PORT", 5000))
-    print(f"✅ Clarity engine is running on port {port}...")
-    app.run(host="0.0.0.0", port=port)
-
+    return results
