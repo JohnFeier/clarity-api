@@ -16,7 +16,12 @@ def process():
             return jsonify({"error": "No variables provided."}), 400
 
         results = generate_deepinsight_statement(variables)
-        summary = rewrite_summary_with_gpt(results)
+        summary = {
+    "summary_3": "This is a 3-sentence summary (mocked).",
+    "summary_2": "This is a 2-sentence summary (mocked).",
+    "summary_1": "This is a 1-sentence summary (mocked)."
+}
+
 
         return jsonify({
             "summary_3": summary["summary_3"],
