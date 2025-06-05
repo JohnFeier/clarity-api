@@ -1,7 +1,10 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
+
 from context_engine import rewrite_summary_with_gpt, generate_deepinsight_statement
 
 app = Flask(__name__)
+CORS(app, origins=["https://clarity-28d13.web.app"])
 
 @app.route("/", methods=["GET"])
 def root():
