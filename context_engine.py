@@ -46,14 +46,26 @@ def find_common_substring(a, b):
     return longest.strip()
 
 def generate_prompt(levels):
-    context = f"{levels['level1']}, {levels['level2']}, {levels['level3']}"
-    return (
-        "Please summarize the following context into three levels:\n"
-        "Level 1: 3-sentence version\n"
-        "Level 2: 2-sentence version\n"
-        "Level 3: 1-sentence version\n\n"
-        f"Context: {context}"
-    )
+    return f"""
+You are an AI designed to reveal hidden meaning between overlapping concepts. 
+You will be given a list of commonalities extracted from adjacent terms (called levels). 
+Your job is to produce a layered interpretation — with increasing brevity — to express the deepest shared context.
+
+Here is the content to interpret:
+
+Level 1 (broad commonality): {levels['level1']}
+Level 2 (deeper overlap): {levels['level2']}
+Level 3 (deepest shared trait): {levels['level3']}
+
+Return the response in exactly this format:
+Level 1: [Three sentence insight]
+Level 2: [Two sentence insight]
+Level 3: [One sentence insight]
+
+Do not repeat phrases from the input. Speak insightfully and interpret the relationship.
+Use subtlety, depth, and poetic clarity if appropriate.
+"""
+
 
 def strip_html(text):
     if text:
