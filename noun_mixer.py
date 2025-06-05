@@ -48,3 +48,4 @@ def assign_categories_with_ai(nouns):
 def collect_other_categories(results):
     return [noun for category, noun in results if category == "Other"]
 
+
