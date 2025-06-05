@@ -1,35 +1,50 @@
-def assign_categories(nouns):
+import os
+import openai
+from dotenv import load_dotenv, find_dotenv
+
+# Load environment variables
+load_dotenv(find_dotenv())
+api_key = os.getenv("OPENAI_API_KEY")
+
+if not api_key:
+    raise ValueError("OPENAI_API_KEY not found in environment")
+
+openai.api_key = api_key
+
+def assign_categories_with_ai(nouns):
     """
-    Assign each noun to one of 13 inner life categories.
+    Uses GPT to categorize each noun into one of 13 predefined categories.
+    Falls back to "Other" if categorization is unclear.
     Returns a list of tuples: (category, noun)
     """
-    category_map = {
-        "Emotion": {"grief", "joy", "anger", "fear", "love", "shame", "surprise", "sadness"},
-        "Desire": {"ambition", "hunger", "lust", "hope", "yearning", "craving", "curiosity"},
-        "Sensation": {"pain", "pleasure", "warmth", "cold", "tingle", "itch", "sight", "sound"},
-        "Imagination": {"fantasy", "dream", "vision", "scenario", "creativity", "fiction"},
-        "Intuition": {"gut", "hunch", "instinct", "premonition", "sense", "knowing"},
-        "Will": {"determination", "drive", "resolve", "intention", "discipline", "motivation"},
-        "Attention": {"focus", "concentration", "awareness", "presence", "alertness"},
-        "Thought": {"idea", "logic", "concept", "belief", "analysis", "reflection"},
-        "Memory": {"recall", "past", "event", "experience", "recollection", "nostalgia"},
-        "Language": {"word", "speech", "communication", "syntax", "narrative", "expression"},
-        "Identity": {"self", "ego", "persona", "character", "role", "reputation"},
-        "Decision-making": {"choice", "selection", "judgment", "preference", "option"},
-        "Problem-solving": {"solution", "strategy", "plan", "approach", "method", "fix"}
-    }
+    predefined_categories = [
+        "Emotion", "Desire", "Sensation", "Imagination", "Intuition",
+        "Will", "Attention", "Thought", "Memory", "Language",
+        "Identity", "Decision-making", "Problem-solving"
+    ]
 
-    results = []
+    prompt = (
+        "You are an AI classifier. Given a list of nouns, assign each to one of these 13 categories: "
+        + ", ".join(predefined_categories) + ".\n"
+        "If a noun cannot clearly fit into any, categorize it as 'Other'.\n"
+        "Respond with a JSON list of tuples in the form: [\"Category\", \"Noun\"].\n"
+        f"Nouns: {', '.join(nouns)}"
+    )
 
-    for noun in nouns:
-        normalized = noun.strip().lower()
-        assigned = False
-        for category, keywords in category_map.items():
-            if normalized in keywords:
-                results.append((category, noun))
-                assigned = True
-                break
-        if not assigned:
-            results.append(("Uncategorized", noun))  # fallback for unknown terms
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.3
+        )
+        content = response.choices[0].message.content.strip()
+        results = eval(content) if content.startswith("[") else []
+        return results
+    except Exception as e:
+        print(f"Error categorizing nouns: {e}")
+        return [("Error", noun) for noun in nouns]
 
-    return results
+# Optional: Utility function to filter 'Other' results for review
+def collect_other_categories(results):
+    return [noun for category, noun in results if category == "Other"]
+
