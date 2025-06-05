@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Radiant Clarity - Results</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-color: #008080;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .placard {
+      background-color: #FFDEAD;
+      border: 2px solid gold;
+      border-radius: 16px;
+      padding: 30px 40px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      text-align: center;
+      width: 90%;
+      max-width: 650px;
+    }
+
+    h1 {
+      font-family: 'Pacifico', cursive;
+      font-size: 2.2em;
+      margin-bottom: 25px;
+    }
+
+    .context-tier {
+      margin-bottom: 20px;
+      padding: 18px;
+      background: white;
+      border-radius: 12px;
+      font-size: 1.2em;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .context-label {
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #008080;
+    }
+  </style>
+</head>
+<body>
+  <div class="placard">
+    <h1>Your Radiant Clarity</h1>
+    <div class="context-tier">
+      <div class="context-label">Tier One Context</div>
+      <div id="tier1">Loading...</div>
+    </div>
+    <div class="context-tier">
+      <div class="context-label">Tier Two Context</div>
+      <div id="tier2">Loading...</div>
+    </div>
+    <div class="context-tier">
+      <div class="context-label">Tier Three Context</div>
+      <div id="tier3">Loading...</div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const data = JSON.parse(localStorage.getItem('clarity_results')) || {};
+      document.getElementById('tier1').textContent = data.summary_3 || 'Tier One context not found.';
+      document.getElementById('tier2').textContent = data.summary_2 || 'Tier Two context not found.';
+      document.getElementById('tier3').textContent = data.summary_1 || 'Tier Three context not found.';
+    });
+  </script>
+</body>
+</html>

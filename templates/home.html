@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Enter Your Nouns - Radiant Clarity</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-color: #008080;
+      margin: 0;
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .placard {
+      background-color: #FFDEAD;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      width: 400px;
+      text-align: center;
+    }
+
+    h1 {
+      font-family: 'Pacifico', cursive;
+      font-size: 32px;
+      margin-bottom: 1rem;
+    }
+
+    input[type="text"] {
+      width: 90%;
+      padding: 0.5rem;
+      margin: 0.5rem 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: #008080;
+      color: white;
+      border: none;
+      padding: 0.7rem 1.5rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #005f5f;
+    }
+
+    #loadingMessage {
+      margin-top: 1rem;
+      font-style: italic;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="placard">
+    <h1>Enter your nouns</h1>
+    <input type="text" id="noun1" placeholder="First noun">
+    <input type="text" id="noun2" placeholder="Second noun">
+    <input type="text" id="noun3" placeholder="Third noun">
+    <button id="submitButton">Find Clarity</button>
+    <p id="loadingMessage">Finding your Radiant Clarity...</p>
+  </div>
+
+  <script>
+    // Keep Render backend awake
+    fetch('https://clarity-api-fi4s.onrender.com/').catch(console.error);
+
+    document.getElementById("submitButton").addEventListener("click", async () => {
+      const noun1 = document.getElementById('noun1').value.trim();
+      const noun2 = document.getElementById('noun2').value.trim();
+      const noun3 = document.getElementById('noun3').value.trim();
+
+      const variables = [noun1, noun2, noun3].filter(Boolean);
+      if (variables.length < 2) {
+        alert('Please enter at least two nouns.');
+        return;
+      }
+
+      const button = document.getElementById("submitButton");
+      const loading = document.getElementById("loadingMessage");
+      button.disabled = true;
+      loading.style.display = "block";
+
+      try {
+        const response = await fetch('https://clarity-api-fi4s.onrender.com/process', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ variables })
+        });
+
+        if (!response.ok) throw new Error(`Server responded with ${response.status}`);
+
+        const data = await response.json();
+
+        if (data.summary_1) {
+          localStorage.setItem('clarity_results', JSON.stringify(data));
+          window.location.href = 'results.html';
+        } else {
+          alert('Failed to generate results.');
+        }
+      } catch (error) {
+        console.error('Fetch error:', error);
+        alert('A network or server error occurred.');
+      } finally {
+        button.disabled = false;
+        loading.style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>
+
+
+
+
