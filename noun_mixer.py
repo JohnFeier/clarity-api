@@ -1,51 +1,48 @@
 import os
-import openai
 from dotenv import load_dotenv, find_dotenv
+from openai import OpenAI
 
 # Load environment variables
 load_dotenv(find_dotenv())
-api_key = os.getenv("OPENAI_API_KEY")
 
+# Set up the OpenAI client
+api_key = os.getenv("OPENAI_API_KEY")
 if not api_key:
     raise ValueError("OPENAI_API_KEY not found in environment")
+client = OpenAI(api_key=api_key)
 
-openai.api_key = api_key
+# Predefined conceptual categories
+CATEGORIES = {
+    "Parenting": ["mother", "father", "child", "baby", "unwed", "parent"],
+    "Substance": ["cannabis", "alcohol", "cocaine", "drug", "weed"],
+    "Culture": ["music", "art", "film", "social", "distortion", "punk"],
+    # Add more categories as needed
+}
 
-def assign_categories_with_ai(nouns):
-    """
-    Uses GPT to categorize each noun into one of 13 predefined categories.
-    Falls back to "Other" if categorization is unclear.
-    Returns a list of tuples: (category, noun)
-    """
-    predefined_categories = [
-        "Emotion", "Desire", "Sensation", "Imagination", "Intuition",
-        "Will", "Attention", "Thought", "Memory", "Language",
-        "Identity", "Decision-making", "Problem-solving"
-    ]
+def assign_categories_with_ai(terms):
+    results = []
+    for term in terms:
+        try:
+            prompt = (
+                f"What is the best high-level category for the term '{term}'?\n"
+                f"Choose from: {', '.join(CATEGORIES.keys())}.\n"
+                "Respond with only the category name."
+            )
+            response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "You categorize terms by their general concept."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=10,
+                temperature=0
+            )
+            category = response.choices[0].message.content.strip()
+            results.append((category, term))
+        except Exception as e:
+            print("Error categorizing nouns:", str(e))
+            results.append(("Other", term))
+    return results
 
-    prompt = (
-        "You are an AI classifier. Given a list of nouns, assign each to one of these 13 categories: "
-        + ", ".join(predefined_categories) + ".\n"
-        "If a noun cannot clearly fit into any, categorize it as 'Other'.\n"
-        "Respond with a JSON list of tuples in the form: [\"Category\", \"Noun\"].\n"
-        f"Nouns: {', '.join(nouns)}"
-    )
-
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4o",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.3
-        )
-        content = response.choices[0].message.content.strip()
-        results = eval(content) if content.startswith("[") else []
-        return results
-    except Exception as e:
-        print(f"Error categorizing nouns: {e}")
-        return [("Error", noun) for noun in nouns]
-
-# Optional: Utility function to filter 'Other' results for review
-def collect_other_categories(results):
-    return [noun for category, noun in results if category == "Other"]
-
-
+def collect_other_categories(categorized_list):
+    return [term for cat, term in categorized_list if cat == "Other"]
