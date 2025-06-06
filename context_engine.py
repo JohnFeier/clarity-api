@@ -1,80 +1,43 @@
-# context_engine.py — clean version
-
-import re
 import os
-from openai import OpenAI
+import re
+import openai
 from dotenv import load_dotenv, find_dotenv
+from flask import Flask, request, jsonify
+from noun_mixer import assign_categories_with_ai, collect_other_categories
 
 # Load environment variables
-dotenv_path = find_dotenv(raise_error_if_not_found=False)
-if dotenv_path:
-    print(f"DEBUG: Loaded .env from {dotenv_path}")
-    load_dotenv(dotenv_path)
-else:
-    print("DEBUG: .env not found")
-
+load_dotenv(find_dotenv())
 api_key = os.getenv("OPENAI_API_KEY")
+
 if not api_key:
     raise ValueError("OPENAI_API_KEY not found in environment")
 
-client = OpenAI(api_key=api_key)
-def noun_mixer(variables):
-    """
-    Given a list of variables (nouns), compares each adjacent pair
-    and returns a synthesized result based only on commonalities.
-    """
-    if not isinstance(variables, list) or len(variables) < 2:
-        return "Please provide at least two variables."
+openai.api_key = api_key
 
-    result = []
-    for i in range(len(variables)):
-        a = variables[i]
-        b = variables[(i + 1) % len(variables)]  # Circular adjacency
-        common = find_common_substring(a, b)
-        if common:
-            result.append(common)
-
-    return " ".join(result) if result else "No commonalities found."
-
-def find_common_substring(a, b):
-    longest = ""
-    for i in range(len(a)):
-        for j in range(i + 1, len(a) + 1):
-            substr = a[i:j]
-            if substr in b and len(substr) > len(longest):
-                longest = substr
-    return longest.strip()
-
-def generate_prompt(levels):
-    return f"""
-You are an AI designed to reveal hidden meaning between overlapping concepts. 
-You will be given a list of commonalities extracted from adjacent terms (called levels). 
-Your job is to produce a layered interpretation — with increasing brevity — to express the deepest shared context.
-
-Here is the content to interpret:
-
-Level 1 (broad commonality): {levels['level1']}
-Level 2 (deeper overlap): {levels['level2']}
-Level 3 (deepest shared trait): {levels['level3']}
-
-Return the response in exactly this format:
-Level 1: [Three sentence insight]
-Level 2: [Two sentence insight]
-Level 3: [One sentence insight]
-
-Do not repeat phrases from the input. Speak insightfully and interpret the relationship.
-Use subtlety, depth, and poetic clarity if appropriate.
-"""
-
+app = Flask(__name__)
 
 def strip_html(text):
     if text:
         return re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', '', text)).strip()
     return ""
-
+def generate_prompt(levels):
+    context = f"{levels['level1']}, {levels['level2']}, {levels['level3']}"
+    return (
+        "You are an AI trained to detect conceptual overlap between abstract or socially relevant ideas.\n"
+        "Given three input terms, do not analyze them individually. Instead, synthesize a shared meaning or theme that unites all three.\n"
+        "Avoid generic abstractions like 'essence' or 'reflection'. Focus on concrete, real-world or psychologically meaningful commonalities.\n"
+        "This is part of a system to help people explore hidden layers of meaning in everyday life.\n\n"
+        f"Input terms: {context}\n\n"
+        "Respond with exactly three tiers:\n"
+        "Level 1: A deep 3-sentence explanation of what unites these concepts.\n"
+        "Level 2: A sharper 2-sentence summary.\n"
+        "Level 3: A one-sentence insight that captures the shared truth.\n\n"
+        "Example of style: If the words were 'protest', 'art', and 'therapy', a good Level 3 might be: 'All three are channels for transforming inner tension into outward expression.'\n\n"
+        "Now generate your three-tier output."
+    )
 def rewrite_summary_with_gpt(levels):
     prompt = generate_prompt(levels)
-    response = client.chat.completions.create(
+    response = openai.ChatCompletion.create(
         model="gpt-4o",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.7
@@ -90,30 +53,38 @@ def rewrite_summary_with_gpt(levels):
         "summary_2": strip_html(match2.group(1)) if match2 else "Could not parse Level 2",
         "summary_1": strip_html(match3.group(1)) if match3 else "Could not parse Level 3"
     }
+
 def generate_deepinsight_statement(variables):
-    """
-    Generates a deep insight statement from a list of noun variables
-    using circular adjacency and commonality extraction.
-    """
-    raw = noun_mixer(variables)
-    return {"level1": raw, "level2": raw, "level3": raw}
+    categorized = assign_categories_with_ai(variables)
+    other = collect_other_categories(categorized)
+    print("DEBUG - 'Other' category terms:", other)
 
-from flask import Flask, request, jsonify
-from noun_mixer import assign_categories
+    just_nouns = [noun for _, noun in categorized]
+    combined = " ".join(just_nouns)
 
-app = Flask(__name__)
+    return {
+        "level1": combined,
+        "level2": combined,
+        "level3": combined
+    }
 
 @app.route('/process', methods=['POST'])
-def process_input():
-    data = request.get_json()
-    input_nouns = data.get('nouns', [])
-    clarity_mode = data.get('clarity_mode', 'tiered')
+def process():
+    try:
+        data = request.get_json()
+        variables = data.get('variables', [])
+        if not variables:
+            return jsonify({"error": "No variables provided."}), 400
 
-    if not input_nouns or not isinstance(input_nouns, list):
-        return jsonify({'error': 'Please provide a list of input nouns.'}), 400
+        levels = generate_deepinsight_statement(variables)
+        summary = rewrite_summary_with_gpt(levels)
 
-    # Placeholder logic — update to call your insight generation functions
-    results = generate_deepinsight_statement(input_nouns)
-    return jsonify(results)
+        return jsonify({
+            "summary_3": summary.get("summary_3", "Error generating 3-sentence summary."),
+            "summary_2": summary.get("summary_2", "Error generating 2-sentence summary."),
+            "summary_1": summary.get("summary_1", "Error generating 1-sentence summary.")
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
