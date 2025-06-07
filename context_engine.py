@@ -1,11 +1,27 @@
-from openai import OpenAI
+import openai
 import os
 from dotenv import load_dotenv
 
+print("🧪 context_engine.py loaded...", flush=True)
+
 load_dotenv()
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+print("🔑 .env loaded", flush=True)
+
+try:
+    openai.api_key = os.getenv("OPENAI_API_KEY")
+    print("✅ OpenAI API key set", flush=True)
+except Exception as e:
+    print("❌ Failed to set OpenAI API key:", str(e), flush=True)
+
+
 
 def generate_deepinsight_statement(variables):
+    """
+    Given a list of 2–3 user terms, this function forms 3-tiered conceptual prisms:
+    Tier 1 = pairs (A∩B, B∩C, A∩C)
+    Tier 2 = double pairs (ABBC, BCAC)
+    Tier 3 = full triple (ABBCBCAC)
+    """
     if not isinstance(variables, list) or len(variables) < 2:
         return {
             "summary_3": "Please enter at least two terms.",
@@ -13,17 +29,22 @@ def generate_deepinsight_statement(variables):
             "summary_1": ""
         }
 
+    # Clean and normalize input
     variables = [v.strip().lower() for v in variables if v.strip()]
-    A, B, C = variables + ["", "", ""]  # pad for safety
+    A, B, C = variables + ["", "", ""]  # pad safely if less than 3
 
-    tier1 = [f"{A} ∩ {B}", f"{B} ∩ {C}", f"{A} ∩ {C}"]
-    tier2 = [f"{A} ∩ {B} ∩ {C}"]
-    tier3 = f"{A} ∩ {B} ∩ {C}"
+    # Conceptual intersections
+    AB = f"{A} ∩ {B}"
+    BC = f"{B} ∩ {C}"
+    AC = f"{A} ∩ {C}"
+    ABBC = f"{AB} ∩ {BC}"
+    BCAC = f"{BC} ∩ {AC}"
+    ABBCBCAC = f"{ABBC} ∩ {BCAC}"
 
     return {
-        "summary_3": f"**Tier 1 – Specific Context**\n{', '.join(tier1)}",
-        "summary_2": f"**Tier 2 – Connecting Context**\n{', '.join(tier2)}",
-        "summary_1": f"**Tier 3 – Profound Insight**\n{tier3}"
+        "summary_3": f"**Tier 1 – Specific Context**\n{AB}, {BC}, {AC}",
+        "summary_2": f"**Tier 2 – Connecting Context**\n{ABBC}, {BCAC}",
+        "summary_1": f"**Tier 3 – Profound Insight**\n{ABBCBCAC}"
     }
 
 def rewrite_summary_with_gpt(deep_contexts):
@@ -38,8 +59,8 @@ def rewrite_summary_with_gpt(deep_contexts):
             "{ 'summary_3': '...', 'summary_2': '...', 'summary_1': '...' }"
         )
 
-        response = client.chat.completions.create(
-            model="gpt-4o",
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a philosophical summarizer."},
                 {"role": "user", "content": prompt}
@@ -48,8 +69,14 @@ def rewrite_summary_with_gpt(deep_contexts):
             max_tokens=500
         )
 
-        content = response.choices[0].message.content.strip()
-        return eval(content)  # assuming OpenAI returns clean JSON
+        content = response['choices'][0]['message']['content'].strip()
+
+
+        try:
+            return eval(content)
+        except Exception as parse_error:
+            print("❌ Error parsing GPT response:", content)
+            raise parse_error
 
     except Exception as e:
         print("❌ GPT Summary Error:", str(e))
