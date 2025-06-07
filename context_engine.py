@@ -1,74 +1,60 @@
-import os
-import re
-from dotenv import load_dotenv, find_dotenv
 from openai import OpenAI
-from noun_mixer import assign_categories_with_ai, collect_other_categories
+import os
+from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv(find_dotenv())
-api_key = os.getenv("OPENAI_API_KEY")
-if not api_key:
-    raise ValueError("OPENAI_API_KEY not found in environment")
+load_dotenv()
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-client = OpenAI(api_key=api_key)
-
-def strip_html(text):
-    if text:
-        return re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', '', text)).strip()
-    return ""
-
-def rewrite_summary_with_gpt(input_string):
-    prompt = f"""
-You are a context synthesis engine trained to extract insight from patterns.
-
-Given the following terms:
-{input_string}
-
-Organize your response into three tiers:
-
-**Tier 1 – Specific Context**  
-List the concrete overlaps or issues these terms highlight. Think in terms of lived experience, law, psychology, social patterns, or cultural markers. Be precise and grounded.
-
-**Tier 2 – Connecting Context**  
-Describe the invisible thread—what structures, tensions, or transitions do these terms point to? How does the specific become the general?
-
-**Tier 3 – Profound Insight**  
-End with a distilled insight or truth that emerges from these connections. Make it resonant and reflective—but never poetic fluff. Stay sharp.
-
-Avoid metaphysical language. This is for serious, clear-headed use by AI and humans alike.
-    """
-
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": "You synthesize insights from term clusters into structured tiers of context."},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=400,
-            temperature=0.6
-        )
-        rewritten = response.choices[0].message.content.strip()
-        sections = rewritten.split("\n\n")
+def generate_deepinsight_statement(variables):
+    if not isinstance(variables, list) or len(variables) < 2:
         return {
-            "summary_3": sections[0] if len(sections) > 0 else "",
-            "summary_2": sections[1] if len(sections) > 1 else "",
-            "summary_1": sections[2] if len(sections) > 2 else "",
-        }
-
-    except Exception as e:
-        return {
-            "summary_3": f"Error generating summary: {str(e)}",
+            "summary_3": "Please enter at least two terms.",
             "summary_2": "",
             "summary_1": ""
         }
 
-def generate_deepinsight_statement(variables):
-    categorized = assign_categories_with_ai(variables)
-    other = collect_other_categories(categorized)
-    print("DEBUG - 'Other' category terms:", other)
+    variables = [v.strip().lower() for v in variables if v.strip()]
+    A, B, C = variables + ["", "", ""]  # pad for safety
 
-    just_nouns = [noun for _, noun in categorized]
-    combined = " ".join(just_nouns)
+    tier1 = [f"{A} ∩ {B}", f"{B} ∩ {C}", f"{A} ∩ {C}"]
+    tier2 = [f"{A} ∩ {B} ∩ {C}"]
+    tier3 = f"{A} ∩ {B} ∩ {C}"
 
-    return combined
+    return {
+        "summary_3": f"**Tier 1 – Specific Context**\n{', '.join(tier1)}",
+        "summary_2": f"**Tier 2 – Connecting Context**\n{', '.join(tier2)}",
+        "summary_1": f"**Tier 3 – Profound Insight**\n{tier3}"
+    }
+
+def rewrite_summary_with_gpt(deep_contexts):
+    try:
+        prompt = (
+            "Rewrite the following context layers as poetic but insightful summaries. Keep Tier 1 specific, "
+            "Tier 2 general, and Tier 3 philosophical or profound.\n\n"
+            f"Tier 1: {deep_contexts['summary_3']}\n"
+            f"Tier 2: {deep_contexts['summary_2']}\n"
+            f"Tier 3: {deep_contexts['summary_1']}\n\n"
+            "Respond in JSON:\n"
+            "{ 'summary_3': '...', 'summary_2': '...', 'summary_1': '...' }"
+        )
+
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "You are a philosophical summarizer."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.6,
+            max_tokens=500
+        )
+
+        content = response.choices[0].message.content.strip()
+        return eval(content)  # assuming OpenAI returns clean JSON
+
+    except Exception as e:
+        print("❌ GPT Summary Error:", str(e))
+        return {
+            "summary_3": "Error generating Tier 1",
+            "summary_2": "Error generating Tier 2",
+            "summary_1": "Error generating Tier 3"
+        }
