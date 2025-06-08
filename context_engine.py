@@ -59,6 +59,8 @@ def rewrite_summary_with_gpt(deep_contexts):
             "{ 'summary_3': '...', 'summary_2': '...', 'summary_1': '...' }"
         )
 
+        print("📤 Sending to OpenAI:\n", prompt, flush=True)
+
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[
@@ -69,19 +71,22 @@ def rewrite_summary_with_gpt(deep_contexts):
             max_tokens=500
         )
 
-        content = response['choices'][0]['message']['content'].strip()
+        print("📥 OpenAI raw response:", response, flush=True)
 
+        content = response['choices'][0]['message']['content'].strip()
+        print("🧾 Extracted content:\n", content, flush=True)
 
         try:
             return eval(content)
         except Exception as parse_error:
-            print("❌ Error parsing GPT response:", content)
+            print("❌ Error parsing GPT response:", content, flush=True)
             raise parse_error
 
     except Exception as e:
-        print("❌ GPT Summary Error:", str(e))
+        print("❌ GPT Summary Error:", str(e), flush=True)
         return {
             "summary_3": "Error generating Tier 1",
             "summary_2": "Error generating Tier 2",
             "summary_1": "Error generating Tier 3"
         }
+
