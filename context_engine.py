@@ -1,5 +1,6 @@
 import openai
 import os
+import json
 from dotenv import load_dotenv
 
 print("🧪 context_engine.py loaded...", flush=True)
@@ -12,8 +13,6 @@ try:
     print("✅ OpenAI API key set", flush=True)
 except Exception as e:
     print("❌ Failed to set OpenAI API key:", str(e), flush=True)
-
-
 
 def generate_deepinsight_statement(variables):
     """
@@ -29,11 +28,10 @@ def generate_deepinsight_statement(variables):
             "summary_1": ""
         }
 
-    # Clean and normalize input
     variables = [v.strip().lower() for v in variables if v.strip()]
-    A, B, C = variables + ["", "", ""]  # pad safely if less than 3
+    A, B, C = (variables + ["", "", ""])[:3]  # 
 
-    # Conceptual intersections
+
     AB = f"{A} ∩ {B}"
     BC = f"{B} ∩ {C}"
     AC = f"{A} ∩ {C}"
@@ -77,10 +75,19 @@ def rewrite_summary_with_gpt(deep_contexts):
         print("🧾 Extracted content:\n", content, flush=True)
 
         try:
-            return eval(content)
-        except Exception as parse_error:
-            print("❌ Error parsing GPT response:", content, flush=True)
-            raise parse_error
+            parsed = json.loads(content.replace("'", '"'))
+            return {
+                "summary_3": parsed.get("summary_3", "Error generating Tier 1"),
+                "summary_2": parsed.get("summary_2", "Error generating Tier 2"),
+                "summary_1": parsed.get("summary_1", "Error generating Tier 3")
+            }
+        except json.JSONDecodeError as parse_error:
+            print("❌ JSON parsing error:", content, flush=True)
+            return {
+                "summary_3": "Error generating Tier 1",
+                "summary_2": "Error generating Tier 2",
+                "summary_1": "Error generating Tier 3"
+            }
 
     except Exception as e:
         print("❌ GPT Summary Error:", str(e), flush=True)
@@ -89,4 +96,5 @@ def rewrite_summary_with_gpt(deep_contexts):
             "summary_2": "Error generating Tier 2",
             "summary_1": "Error generating Tier 3"
         }
+
 
