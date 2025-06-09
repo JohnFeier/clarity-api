@@ -49,10 +49,13 @@ def generate_deepinsight_statement(variables):
 
 
 def rewrite_summary_with_gpt(intersections):
+    import openai
     from os import getenv
+    import json
 
     openai.api_key = getenv("OPENAI_API_KEY")
 
+    # Extract intersections
     ab = intersections.get("intersection_ab", "")
     bc = intersections.get("intersection_bc", "")
     ac = intersections.get("intersection_ac", "")
@@ -65,21 +68,23 @@ Given the following intersecting concepts:
 - A ∩ C: {ac}
 - A ∩ B ∩ C: {abc}
 
-Generate three tiers of insight as follows:
+Write three tiers of insight based on these:
 
-Tier One Context:
-Describe the specific insight that emerges when all three concepts are considered together.
-Use clear, accessible language. Do not use poetic metaphors. Be insightful and direct.
+Tier One Context (summary_1):
+- Write exactly **three sentences**.
+- Each sentence should describe one of the pairwise intersections (A∩B, B∩C, A∩C).
+- Be clear, direct, and insightful.
 
-Tier Two Context:
-For each of the three pairs (A∩B, B∩C, A∩C), explain what the concepts share and how they interact. Keep language plain and specific.
+Tier Two Context (summary_2):
+- Write exactly **two sentences**.
+- Each sentence should describe what happens when two of the pairwise intersections are combined.
 
-Tier Three Context:
-Synthesize a distilled theme, principle, or underlying dynamic that runs through all the above intersections.
-Use simple language — avoid flowery or grandiose style.
+Tier Three Context (summary_3):
+- Write exactly **one sentence**.
+- It should express the core insight that unites all three concepts.
 
-Use this exact format. Return only the following JSON object:
-{{ 
+Respond only with a valid JSON object using double quotes. Format it exactly like this:
+{{
   "summary_1": "...",
   "summary_2": "...",
   "summary_3": "..."
@@ -91,7 +96,7 @@ Use this exact format. Return only the following JSON object:
         messages=[
             {
                 "role": "system",
-                "content": "You are a helpful assistant that generates deep insights in clear, plain language. Output only valid JSON."
+                "content": "You are a structured assistant that writes deep but clear insights. Output only the JSON."
             },
             {
                 "role": "user",
