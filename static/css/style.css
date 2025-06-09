@@ -160,3 +160,20 @@ body.inner-page-body {
     display: inline-block;
     vertical-align: middle;
 }
+
+/* Style for tier headers like "Tier One Context" */
+.tier-title {
+  font-family: 'Pacifico', cursive;
+  text-align: center;
+  font-size: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+/* Style for the GPT-generated result text */
+.tier-content {
+  font-family: sans-serif;
+  text-align: left;
+  text-indent: 0;
+  margin-bottom: 2em;
+  line-height: 1.6;
+}
