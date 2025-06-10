@@ -161,13 +161,13 @@ body.inner-page-body {
     vertical-align: middle;
 }
 
-/* Style for tier headers like "Tier One Context" */
 .tier-title {
   font-family: 'Pacifico', cursive;
   text-align: center;
   font-size: 1.5em;
   margin-bottom: 0.5em;
 }
+
 
 /* Style for the GPT-generated result text */
 .tier-content {
