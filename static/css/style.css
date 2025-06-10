@@ -168,8 +168,6 @@ body.inner-page-body {
   margin-bottom: 0.5em;
 }
 
-
-/* Style for the GPT-generated result text */
 .tier-content {
   font-family: sans-serif;
   text-align: left;
@@ -177,3 +175,4 @@ body.inner-page-body {
   margin-bottom: 2em;
   line-height: 1.6;
 }
+
