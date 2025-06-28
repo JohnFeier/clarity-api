@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Your Clarity Results</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-SHNFKJPC74"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-SHNFKJPC74');
+  </script>
+</head>
+<body class="inner-page-body">
+  <div class="results-card">
+    <h2 class="tier-title">Tier One Context</h2>
+    <div class="tier-content" id="tier1"></div>
+  </div>
+
+  <div class="results-card">
+    <h2 class="tier-title">Tier Two Context</h2>
+    <div class="tier-content" id="tier2"></div>
+  </div>
+
+  <div class="results-card">
+    <h2 class="tier-title">Tier Three Context</h2>
+    <div class="tier-content" id="tier3"></div>
+  </div>
+
+  <!-- 🌟 Radiance Mode Button -->
+  <div class="results-card">
+    <button id="radiance-btn">Visualize Insight (Radiance Mode)</button>
+    <div id="image-container" style="margin-top: 20px;"></div>
+  </div>
+
+  <button class="back-button" onclick="window.location.href='home'">← Back to Home</button>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const tier1 = localStorage.getItem("summary_1") || "No result found.";
+      const tier2 = localStorage.getItem("summary_2") || "No result found.";
+      const tier3 = localStorage.getItem("summary_3") || "No result found.";
+
+      document.getElementById('tier1').textContent = tier1;
+      document.getElementById('tier2').textContent = tier2;
+      document.getElementById('tier3').textContent = tier3;
+
+      document.getElementById("radiance-btn").addEventListener("click", async () => {
+        const prompt = tier3;
+
+        try {
+          const response = await fetch("https://your-backend.com/generate-image", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ prompt })
+          });
+
+          const data = await response.json();
+          const imageUrl = data.image_url;
+
+          document.getElementById("image-container").innerHTML = `
+            <img src="${imageUrl}" alt="Radiance Output" style="max-width:100%; border-radius: 12px; margin-top: 10px;" />
+          `;
+        } catch (error) {
+          console.error("Error generating image:", error);
+          document.getElementById("image-container").textContent = "Sorry, something went wrong creating the image.";
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+
