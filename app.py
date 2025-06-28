@@ -5,6 +5,9 @@ import openai
 import os
 from dotenv import load_dotenv
 
+template_dir = os.path.join(os.path.dirname(__file__), 'templates')
+app = Flask(__name__, template_folder=template_dir)
+
 # 🌱 Load environment variables
 load_dotenv()
 TEXT_API_KEY = os.getenv("OPENAI_KEY_TEXT")
