@@ -32,16 +32,20 @@ def home():
 def results():
     return render_template("results.html")
 
+from flask import make_response
+
 @app.route('/generate-image', methods=['POST', 'OPTIONS'])
 def generate_image():
     if request.method == 'OPTIONS':
-        # CORS preflight - return OK with headers (handled by Flask-CORS already)
-        return '', 200
+        response = make_response()
+        response.headers["Access-Control-Allow-Origin"] = "https://clarity-28d13.web.app"
+        response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        return response, 200
 
     try:
         openai.api_key = IMAGE_API_KEY
-
-        data = request.get_json()
+        data = request.get_json(force=True)  # <- force ensures JSON parsing
         prompt = data.get('prompt', '')
 
         if not prompt:
