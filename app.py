@@ -5,18 +5,19 @@ import openai
 import os
 from dotenv import load_dotenv
 
+# Set template directory and initialize Flask app
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 app = Flask(__name__, template_folder=template_dir)
 
-# 🌱 Load environment variables
+# Enable CORS for frontend origin
+CORS(app, resources={r"/*": {"origins": "https://clarity-28d13.web.app"}})
+
+# Load environment variables
 load_dotenv()
 TEXT_API_KEY = os.getenv("OPENAI_KEY_TEXT")
 IMAGE_API_KEY = os.getenv("OPENAI_KEY_IMAGE")
 
 print("🚀 Flask app starting successfully...", flush=True)
-
-app = Flask(__name__)
-CORS(app, origins=["https://clarity-28d13.web.app"])
 
 @app.route("/")
 def index():
@@ -54,12 +55,13 @@ def process():
             "summary_2": summary.get("summary_2", "Error generating 2-sentence summary."),
             "summary_1": summary.get("summary_1", "Error generating 1-sentence summary.")
         })
+
     except Exception as e:
         print("🔥 Exception occurred in /process route:", str(e), flush=True)
-        raise e
+        return jsonify({"error": "Internal server error."}), 500
 
-# 🌟 New Radiance Image Generator Route
-@app.route('/generate-image', methods=['POST'])
+# 🌟 Radiance Image Generator Route
+@app.route('/generate-image', methods=['POST', 'OPTIONS'])
 def generate_image():
     try:
         openai.api_key = IMAGE_API_KEY
@@ -86,6 +88,7 @@ def generate_image():
         print("🔥 Error generating image:", str(e), flush=True)
         return jsonify({"error": "Failed to generate image."}), 500
 
+# Entry point
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
