@@ -45,33 +45,6 @@ def generate_image():
 
     try:
         openai.api_key = IMAGE_API_KEY
-        data = request.get_json(force=True)  # <- force ensures JSON parsing
-        prompt = data.get('prompt', '')
-
-        if not prompt:
-            return jsonify({"error": "No prompt provided."}), 400
-
-        print("🎨 Generating image for prompt:", prompt, flush=True)
-
-        response = openai.Image.create(
-            prompt=prompt,
-            n=1,
-            size="1024x1024"
-        )
-
-        image_url = response['data'][0]['url']
-        print("🖼️ Image URL:", image_url, flush=True)
-        return jsonify({'image_url': image_url})
-
-    except Exception as e:
-        print("🔥 Error generating image:", str(e), flush=True)
-        return jsonify({"error": "Failed to generate image."}), 500
-
-# 🌟 Radiance Image Generator Route
-@app.route('/generate-image', methods=['POST', 'OPTIONS'])
-def generate_image():
-    try:
-        openai.api_key = IMAGE_API_KEY
 
         data = request.get_json()
         prompt = data.get('prompt', '')
@@ -89,11 +62,15 @@ def generate_image():
 
         image_url = response['data'][0]['url']
         print("🖼️ Image URL:", image_url, flush=True)
-        return jsonify({'image_url': image_url})
+
+        json_response = jsonify({'image_url': image_url})
+        json_response.headers["Access-Control-Allow-Origin"] = "https://clarity-28d13.web.app"
+        return json_response
 
     except Exception as e:
         print("🔥 Error generating image:", str(e), flush=True)
         return jsonify({"error": "Failed to generate image."}), 500
+
 
 # Entry point
 if __name__ == "__main__":
