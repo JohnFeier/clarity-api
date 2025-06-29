@@ -81,6 +81,50 @@ def generate_image():
         response.headers["Access-Control-Allow-Origin"] = "https://clarity-28d13.web.app"
         return response, 500
 
+@app.route('/process', methods=['POST', 'OPTIONS'])
+def process():
+    # Handle CORS preflight OPTIONS request
+    if request.method == 'OPTIONS':
+        response = make_response()
+        response.headers["Access-Control-Allow-Origin"] = "https://clarity-28d13.web.app"
+        response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        response.headers["Access-Control-Max-Age"] = "3600"
+        return response, 200
+
+    try:
+        openai.api_key = TEXT_API_KEY
+
+        data = request.get_json(force=True)
+        print("📥 Received data from frontend:", data, flush=True)
+
+        variables = data.get('variables', [])
+        if not variables:
+            print("❌ No variables provided.", flush=True)
+            response = jsonify({"error": "No variables provided."})
+            response.headers["Access-Control-Allow-Origin"] = "https://clarity-28d13.web.app"
+            return response, 400
+
+        results = generate_deepinsight_statement(variables)
+        print("🧠 Deep Insight Structure:", results, flush=True)
+
+        summary = rewrite_summary_with_gpt(results)
+        print("🎯 Final GPT Summary:", summary, flush=True)
+
+        response = jsonify({
+            "summary_3": summary.get("summary_3", "Error generating 3-sentence summary."),
+            "summary_2": summary.get("summary_2", "Error generating 2-sentence summary."),
+            "summary_1": summary.get("summary_1", "Error generating 1-sentence summary.")
+        })
+        response.headers["Access-Control-Allow-Origin"] = "https://clarity-28d13.web.app"
+        return response, 200
+
+    except Exception as e:
+        print("🔥 Exception occurred in /process route:", str(e), flush=True)
+        response = jsonify({"error": "Internal server error."})
+        response.headers["Access-Control-Allow-Origin"] = "https://clarity-28d13.web.app"
+        return response, 500
+
 
 # Entry point
 if __name__ == "__main__":
