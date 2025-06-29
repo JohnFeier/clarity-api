@@ -36,40 +36,46 @@ from flask import make_response
 
 @app.route('/generate-image', methods=['POST', 'OPTIONS'])
 def generate_image():
+    # Handle CORS preflight OPTIONS request
     if request.method == 'OPTIONS':
         response = make_response()
         response.headers["Access-Control-Allow-Origin"] = "https://clarity-28d13.web.app"
         response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
         response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        response.headers["Access-Control-Max-Age"] = "3600"
         return response, 200
 
     try:
         openai.api_key = IMAGE_API_KEY
 
-        data = request.get_json()
+        data = request.get_json(force=True)
         prompt = data.get('prompt', '')
 
         if not prompt:
-            return jsonify({"error": "No prompt provided."}), 400
+            response = jsonify({"error": "No prompt provided."})
+            response.headers["Access-Control-Allow-Origin"] = "https://clarity-28d13.web.app"
+            return response, 400
 
         print("🎨 Generating image for prompt:", prompt, flush=True)
 
-        response = openai.Image.create(
+        response_data = openai.Image.create(
             prompt=prompt,
             n=1,
             size="1024x1024"
         )
 
-        image_url = response['data'][0]['url']
+        image_url = response_data['data'][0]['url']
         print("🖼️ Image URL:", image_url, flush=True)
 
-        json_response = jsonify({'image_url': image_url})
-        json_response.headers["Access-Control-Allow-Origin"] = "https://clarity-28d13.web.app"
-        return json_response
+        response = jsonify({'image_url': image_url})
+        response.headers["Access-Control-Allow-Origin"] = "https://clarity-28d13.web.app"
+        return response, 200
 
     except Exception as e:
         print("🔥 Error generating image:", str(e), flush=True)
-        return jsonify({"error": "Failed to generate image."}), 500
+        response = jsonify({"error": "Failed to generate image."})
+        response.headers["Access-Control-Allow-Origin"] = "https://clarity-28d13.web.app"
+        return response, 500
 
 
 # Entry point
