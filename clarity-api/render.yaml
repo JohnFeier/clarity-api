@@ -1,8 +1,0 @@
-services:
-  - type: web
-    name: radiant-clarity-api
-    env: python
-    buildCommand: ""
-    startCommand: gunicorn context_engine:app
-    plan: free
-    branch: main
