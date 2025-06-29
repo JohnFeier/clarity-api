@@ -10,7 +10,11 @@ template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 app = Flask(__name__, template_folder=template_dir)
 
 # ✅ Enable CORS globally for the frontend origin
-CORS(app, origins=["https://clarity-28d13.web.app"])
+CORS(app,
+     origins=["https://clarity-28d13.web.app"],
+     methods=["GET", "POST", "OPTIONS"],
+     allow_headers=["Content-Type"],
+     supports_credentials=True)
 
 
 # Load environment variables
