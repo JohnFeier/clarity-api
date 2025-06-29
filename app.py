@@ -1,17 +1,17 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, make_response
 from flask_cors import CORS
-from context_engine import rewrite_summary_with_gpt, generate_deepinsight_statement
 import openai
 import os
 from dotenv import load_dotenv
+from context_engine import rewrite_summary_with_gpt, generate_deepinsight_statement
 
 # Set template directory and initialize Flask app
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 app = Flask(__name__, template_folder=template_dir)
 
+# ✅ Enable CORS globally for the frontend origin
+CORS(app, origins=["https://clarity-28d13.web.app"])
 
-# Enable CORS for frontend origin
-CORS(app, resources={r"/*": {"origins": "https://clarity-28d13.web.app"}})
 
 # Load environment variables
 load_dotenv()
@@ -34,7 +34,7 @@ def results():
 
 from flask import make_response
 
-@app.route('/generate-image', methods=['POST', 'OPTIONS'])
+@app.route('/generate-image', methods=['POST'])
 def generate_image():
     # Handle CORS preflight OPTIONS request
     if request.method == 'OPTIONS':
