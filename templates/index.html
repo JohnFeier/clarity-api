@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  <meta charset="UTF-8">
+  <title>Clarity - Welcome</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#008080">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-color: #008080;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: sans-serif;
+    }
+
+    .placard {
+      background-color: #FFDEAD;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      width: 400px;
+    }
+
+    svg {
+      width: 300px;
+      height: 300px;
+      margin-bottom: 1rem;
+    }
+
+    .logo-text {
+      font-family: 'Pacifico', cursive;
+      font-size: 48px;
+      margin-top: 10px;
+      margin-bottom: 20px;
+    }
+
+    .enter-button {
+      background-color: #008080;
+      color: white;
+      border: none;
+      padding: 0.7rem 1.5rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .enter-button:hover {
+      background-color: #005f5f;
+    }
+  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-SHNFKJPC74"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-SHNFKJPC74');
+</script>
+
+</head>
+<body>
+  <div class="placard">
+    <svg viewBox="0 0 240 240">
+      <circle cx="80" cy="120" r="50" fill="lightblue" fill-opacity="0.6"/>
+      <circle cx="160" cy="120" r="50" fill="deepskyblue" fill-opacity="0.6"/>
+      <circle cx="120" cy="60" r="50" fill="darkcyan" fill-opacity="0.6"/>
+    </svg>
+    <div class="logo-text">Clarity</div>
+    <a href="/home" class="enter-button">Enter</a>
+  </div>
+</body>
+</html>
+
+
+
+
+
