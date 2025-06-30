@@ -40,39 +40,45 @@
 
   <button class="back-button" onclick="window.location.href='home'">← Back to Home</button>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const tier1 = localStorage.getItem("summary_1") || "No result found.";
-      const tier2 = localStorage.getItem("summary_2") || "No result found.";
-      const tier3 = localStorage.getItem("summary_3") || "No result found.";
+ <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const tier1 = localStorage.getItem("summary_1") || "No result found.";
+    const tier2 = localStorage.getItem("summary_2") || "No result found.";
+    const tier3 = localStorage.getItem("summary_3") || "No result found.";
 
-      document.getElementById('tier1').textContent = tier1;
-      document.getElementById('tier2').textContent = tier2;
-      document.getElementById('tier3').textContent = tier3;
+    document.getElementById('tier1').textContent = tier1;
+    document.getElementById('tier2').textContent = tier2;
+    document.getElementById('tier3').textContent = tier3;
 
-      document.getElementById("radiance-btn").addEventListener("click", async () => {
-        const prompt = tier3;
+    document.getElementById("radiance-btn").addEventListener("click", async () => {
+      const prompt = tier3;
 
-        try {
-         const response = await fetch("https://clarity-api-fi4s.onrender.com/generate-image", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ prompt })
-          });
+      try {
+        const response = await fetch("https://clarity-api-fi4s.onrender.com/generate-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt })
+        });
 
-          const data = await response.json();
-          const imageUrl = data.image_url;
+        const data = await response.json();
 
+        // 🌈 Log the result for debugging
+        console.log("🌈 Radiance image response:", data);
+
+        const imageUrl = data.image_url;
+
+        if (imageUrl) {
           document.getElementById("image-container").innerHTML = `
             <img src="${imageUrl}" alt="Radiance Output" style="max-width:100%; border-radius: 12px; margin-top: 10px;" />
           `;
-        } catch (error) {
-          console.error("Error generating image:", error);
-          document.getElementById("image-container").textContent = "Sorry, something went wrong creating the image.";
+        } else {
+          document.getElementById("image-container").textContent = "Sorry, no image was returned.";
         }
-      });
-    });
-  </script>
-</body>
-</html>
 
+      } catch (error) {
+        console.error("❌ Error generating image:", error);
+        document.getElementById("image-container").textContent = "Sorry, something went wrong creating the image.";
+      }
+    });
+  });
+</script>

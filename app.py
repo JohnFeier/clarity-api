@@ -50,7 +50,9 @@ def generate_image():
         return response, 200
 
     try:
-        openai.api_key = IMAGE_API_KEY
+        print(f"🔍 API key present: {bool(os.environ.get('OPENAI_KEY_IMAGE'))}", flush=True)
+        print("👁️‍🗨️ ENV OPENAI_KEY_IMAGE:", os.environ.get("OPENAI_KEY_IMAGE"), flush=True)
+        openai.api_key = os.environ.get("OPENAI_KEY_IMAGE")
 
         data = request.get_json(force=True)
         prompt = data.get('prompt', '')
