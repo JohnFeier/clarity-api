@@ -5,6 +5,10 @@ import os
 from dotenv import load_dotenv
 from context_engine import rewrite_summary_with_gpt, generate_deepinsight_statement
 
+# Load environment variables
+load_dotenv()
+openai.api_key = os.environ.get("OPENAI_API_KEY")
+
 # Set template directory and initialize Flask app
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 app = Flask(__name__, template_folder=template_dir)
@@ -15,12 +19,6 @@ CORS(app,
      methods=["GET", "POST", "OPTIONS"],
      allow_headers=["Content-Type"],
      supports_credentials=True)
-
-
-# Load environment variables
-load_dotenv()
-TEXT_API_KEY = os.getenv("OPENAI_KEY_TEXT")
-IMAGE_API_KEY = os.getenv("OPENAI_KEY_IMAGE")
 
 print("🚀 Flask app starting successfully...", flush=True)
 
@@ -36,9 +34,7 @@ def home():
 def results():
     return render_template("results.html")
 
-from flask import make_response
-
-@app.route('/generate-image', methods=['POST'])
+@app.route('/generate-image', methods=['POST', 'OPTIONS'])
 def generate_image():
     # Handle CORS preflight OPTIONS request
     if request.method == 'OPTIONS':
@@ -50,9 +46,8 @@ def generate_image():
         return response, 200
 
     try:
-        print(f"🔍 API key present: {bool(os.environ.get('OPENAI_KEY_IMAGE'))}", flush=True)
-        print("👁️‍🗨️ ENV OPENAI_KEY_IMAGE:", os.environ.get("OPENAI_KEY_IMAGE"), flush=True)
-        openai.api_key = os.environ.get("OPENAI_KEY_IMAGE")
+        print(f"🔍 API key present: {bool(openai.api_key)}", flush=True)
+        print("👁️‍🗨️ ENV OPENAI_API_KEY:", openai.api_key, flush=True)
 
         data = request.get_json(force=True)
         prompt = data.get('prompt', '')
@@ -63,11 +58,11 @@ def generate_image():
             return response, 400
 
         print("🎨 Generating image for prompt:", prompt, flush=True)
-
         response_data = openai.Image.create(
             prompt=prompt,
             n=1,
-            size="1024x1024"
+            size="1024x1024",
+            response_format="url"
         )
 
         image_url = response_data['data'][0]['url']
@@ -95,8 +90,6 @@ def process():
         return response, 200
 
     try:
-        openai.api_key = TEXT_API_KEY
-
         data = request.get_json(force=True)
         print("📥 Received data from frontend:", data, flush=True)
 
@@ -126,7 +119,6 @@ def process():
         response = jsonify({"error": "Internal server error."})
         response.headers["Access-Control-Allow-Origin"] = "https://clarity-28d13.web.app"
         return response, 500
-
 
 # Entry point
 if __name__ == "__main__":
