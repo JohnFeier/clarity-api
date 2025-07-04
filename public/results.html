@@ -32,6 +32,13 @@
     <div class="tier-content" id="tier3"></div>
   </div>
 
+  <!-- 🌸 Radiant Signature Display -->
+  <div class="results-card">
+    <h2 class="tier-title">Radiant Signatures</h2>
+    <div class="tier-content" id="signatureDisplay"></div>
+    <div class="tier-content" id="radianceInsight" style="font-style: italic; color: #555; margin-top: 1em;"></div>
+  </div>
+
   <!-- 🌟 Radiance Mode Button -->
   <div class="results-card">
     <button id="radiance-btn">Visualize Insight (Radiance Mode)</button>
@@ -50,6 +57,36 @@
     document.getElementById('tier2').textContent = tier2;
     document.getElementById('tier3').textContent = tier3;
 
+    const sigs = JSON.parse(localStorage.getItem("signatures") || "[]");
+    const names = JSON.parse(localStorage.getItem("suggested_nouns") || "[]");
+
+    const display = sigs.map((sig, i) => `<strong>Noun ${i + 1}</strong>: ${sig}`).join('<br>');
+    document.getElementById("signatureDisplay").innerHTML = display;
+
+    const traitAnalysis = () => {
+      const shared = sigs.reduce((acc, sig) => {
+        [...sig].forEach((ch, idx) => {
+          acc[idx] = acc[idx] || new Set();
+          acc[idx].add(ch);
+        });
+        return acc;
+      }, []);
+
+      const sharedCount = shared.filter(set => set && set.size === 1).length;
+
+      if (sharedCount >= 3) {
+        return "✨ These nouns share deep structural essence — expect clarity and resonance.";
+      } else if (sharedCount === 2) {
+        return "🌗 This triad holds both unity and tension — a fertile field for insight.";
+      } else {
+        return "🔥 Wild divergence detected. Tier Three is dancing on the edge of paradox.";
+      }
+    };
+
+    if (sigs.length === 3) {
+      document.getElementById("radianceInsight").textContent = traitAnalysis();
+    }
+
     document.getElementById("radiance-btn").addEventListener("click", async () => {
       const prompt = tier3;
 
@@ -61,8 +98,6 @@
         });
 
         const data = await response.json();
-
-        // 🌈 Log the result for debugging
         console.log("🌈 Radiance image response:", data);
 
         const imageUrl = data.image_url;
@@ -82,3 +117,5 @@
     });
   });
 </script>
+</body>
+</html>

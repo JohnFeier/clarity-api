@@ -46,6 +46,25 @@
   <script>
     fetch('https://clarity-api-fi4s.onrender.com/').catch(console.error);
 
+    const traits = {
+      Justice:      { meta: '🌫️', form: '⚪', life: '🪨', time: '♾️' },
+      Tree:         { meta: '🪨', form: '⚪', life: '🧠', time: '⏳' },
+      Family:       { meta: '🌫️', form: '🧩', life: '🧠', time: '⏳' },
+      Ecosystem:    { meta: '🪨', form: '🧩', life: '🧠', time: '⏳' },
+      Number:       { meta: '🌫️', form: '⚪', life: '🪨', time: '♾️' },
+      Law:          { meta: '🌫️', form: '⚪', life: '🪨', time: '♾️' },
+      Memory:       { meta: '🌫️', form: '🧩', life: '🧠', time: '⏳' },
+      Fantasy:      { meta: '🌫️', form: '⚪', life: '🧠', time: '♾️' },
+      Ritual:       { meta: '🌫️', form: '🧩', life: '🧠', time: '♾️' },
+      Space:        { meta: '🪨', form: '⚪', life: '🪨', time: '♾️' }
+    };
+
+    function getSignature(noun) {
+      const data = traits[noun.charAt(0).toUpperCase() + noun.slice(1).toLowerCase()];
+      if (!data) return "❓";
+      return `${data.meta}${data.form}${data.life}${data.time}`;
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("activation-button").addEventListener("click", async () => {
         const noun1 = document.getElementById('noun1').value.trim();
@@ -57,6 +76,12 @@
           alert('Please enter at least two nouns.');
           return;
         }
+
+        // Get signatures and store them
+        const sig1 = getSignature(noun1);
+        const sig2 = getSignature(noun2);
+        const sig3 = getSignature(noun3);
+        localStorage.setItem("signatures", JSON.stringify([sig1, sig2, sig3]));
 
         gtag('event', 'submit_nouns', {
           'event_category': 'engagement',
@@ -150,4 +175,5 @@
   </script>
 </body>
 </html>
+
 
