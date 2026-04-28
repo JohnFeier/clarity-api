@@ -1,10 +1,13 @@
-from radiant_clarity_engine import run_engines, RADIANT_SIGNATURES
 from flask import Flask, request, jsonify, render_template, make_response
 from flask_cors import CORS
 import openai
 import os
 from dotenv import load_dotenv
-from context_engine import rewrite_summary_with_gpt, generate_deepinsight_statement
+
+# Import the new Logic Funnel from your updated context_engine
+from context_engine import run_clarity_funnel
+# Import Radiance logic (assuming it's in your radiant_clarity_engine file)
+from radiant_clarity_engine import run_engines, RADIANT_SIGNATURES
 
 # Load environment variables
 load_dotenv()
@@ -21,7 +24,7 @@ CORS(app,
      allow_headers=["Content-Type"],
      supports_credentials=True)
 
-print("🚀 Flask app starting successfully...", flush=True)
+print("🚀 Flask app starting with Logic Funnel engine...", flush=True)
 
 @app.route("/")
 def index():
@@ -51,32 +54,33 @@ def process():
         print("📥 Received data from frontend:", data, flush=True)
 
         variables = data.get('variables', [])
-        if not variables:
-            print("❌ No variables provided.", flush=True)
-            response = jsonify({"error": "No variables provided."})
+        if not variables or len(variables) < 3:
+            print("❌ Not enough variables provided.", flush=True)
+            response = jsonify({"error": "Three nouns are required for the funnel."})
             response.headers["Access-Control-Allow-Origin"] = "https://clarity-28d13.web.app"
             return response, 400
 
-        # 💡 Clarity
-        results = generate_deepinsight_statement(variables)
-        print("🧠 Deep Insight Structure:", results, flush=True)
+        # --- 💡 CLARITY: THE LOGIC FUNNEL ---
+        # We pass the nouns into the funnel to get Tier 1, 2, and 3 results
+        funnel_results = run_clarity_funnel(variables)
+        proto_idea = funnel_results.get("tier_3", "Synthesis incomplete.")
+        
+        print("🧠 Logic Funnel Complete. Proto-idea:", proto_idea, flush=True)
 
-        summary = rewrite_summary_with_gpt(results)
-        print("🎯 Final GPT Summary:", summary, flush=True)
+        # --- 🌈 RADIANCE ---
+        # We still use the original nouns for now, but Radiance is next for an upgrade!
+        noun1, noun2, noun3 = [v.strip() for v in variables[:3]]
+        selected_signature = RADIANT_SIGNATURES[0] 
+        
+        radiant_output = run_engines(noun1, noun2, noun3, selected_signature)["Radiance"]
+        print("✨ Radiance Output generated", flush=True)
 
-        # 🌈 Radiance
-        if len(variables) >= 3:
-            noun1, noun2, noun3 = variables[:3]
-            selected_signature = RADIANT_SIGNATURES[0]  # Can be randomized later
-            radiant_output = run_engines(noun1, noun2, noun3, selected_signature)["Radiance"]
-            print("✨ Radiance Output:", radiant_output, flush=True)
-        else:
-            radiant_output = {"error": "Radiance requires 3 input nouns."}
-
+        # --- 📤 RESPONSE ---
+        # We map proto_idea to 'summary_1' so your current frontend still displays it
         response = jsonify({
-            "summary_3": summary.get("summary_3", "Error generating 3-sentence summary."),
-            "summary_2": summary.get("summary_2", "Error generating 2-sentence summary."),
-            "summary_1": summary.get("summary_1", "Error generating 1-sentence summary."),
+            "summary_1": proto_idea,
+            "tier_1": funnel_results.get("tier_1"),
+            "tier_2": funnel_results.get("tier_2"),
             "radiance": radiant_output
         })
         response.headers["Access-Control-Allow-Origin"] = "https://clarity-28d13.web.app"
@@ -84,7 +88,9 @@ def process():
 
     except Exception as e:
         print("🔥 Exception occurred in /process route:", str(e), flush=True)
-        response = jsonify({"error": "Internal server error."})
+        response = jsonify({"error": f"Internal server error: {str(e)}"})
         response.headers["Access-Control-Allow-Origin"] = "https://clarity-28d13.web.app"
         return response, 500
 
+if __name__ == "__main__":
+    app.run(debug=True)
