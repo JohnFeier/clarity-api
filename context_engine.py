@@ -16,105 +16,58 @@ except Exception as e:
     print("❌ Failed to set OpenAI API key:", str(e), flush=True)
 
 
-def generate_deepinsight_statement(variables):
+def get_synthesis(term1, term2, depth_level):
     """
-    Given a list of 2–3 user terms, this function forms a structured context model:
-    Tier 1 = base pairwise intersections (A∩B, B∩C, A∩C)
-    Tier 2 = composite double pairs (AB ∩ BC, BC ∩ AC)
-    Tier 3 = full triple combination (AB ∩ BC ∩ AC)
+    The 'Chewing' Mechanism: 
+    This function makes the actual call to OpenAI for each pair.
     """
-    if not isinstance(variables, list) or len(variables) < 2:
-        return {
-            "summary_3": "Please enter at least two terms.",
-            "summary_2": "",
-            "summary_1": ""
-        }
+    if depth_level == 1:
+        role_description = "Identify the most fundamental shared characteristic between these two nouns."
+    elif depth_level == 2:
+        role_description = "Synthesize these two conceptual themes into a single, deeper proto-idea."
+    else:
+        role_description = "Distill these proto-ideas into one final, universal 'Fundamental Force'."
 
-    variables = [v.strip().lower() for v in variables if v.strip()]
-    A, B, C = (variables + ["", "", ""])[:3]
-
-    AB = f"{A} ∩ {B}"
-    BC = f"{B} ∩ {C}"
-    AC = f"{A} ∩ {C}"
-    ABBC = f"{AB} ∩ {BC}"
-    BCAC = f"{BC} ∩ {AC}"
-    ABBCBCAC = f"{ABBC} ∩ {BCAC}"
-
-    return {
-        "intersection_ab": AB,
-        "intersection_bc": BC,
-        "intersection_ac": AC,
-        "intersection_abc": ABBCBCAC
-    }
-
-
-def rewrite_summary_with_gpt(intersections):
-    import openai
-    from os import getenv
-    import json
-
-    openai.api_key = getenv("OPENAI_API_KEY")
-
-    # Extract intersections
-    ab = intersections.get("intersection_ab", "")
-    bc = intersections.get("intersection_bc", "")
-    ac = intersections.get("intersection_ac", "")
-    abc = intersections.get("intersection_abc", "")
-
-    prompt = f"""
-Given the following intersecting concepts:
-- A ∩ B: {ab}
-- B ∩ C: {bc}
-- A ∩ C: {ac}
-- A ∩ B ∩ C: {abc}
-
-Write three tiers of insight based on these:
-
-Tier One Context (summary_1):
-- Write exactly **three sentences**.
-- Each sentence should describe one of the pairwise intersections (A∩B, B∩C, A∩C).
-- Be clear, direct, and insightful.
-
-Tier Two Context (summary_2):
-- Write exactly **two sentences**.
-- Each sentence should describe what happens when two of the pairwise intersections are combined.
-
-Tier Three Context (summary_3):
-- Write exactly **one sentence**.
-- It should express the core insight that unites all three concepts.
-
-Respond only with a valid JSON object using double quotes. Format it exactly like this:
-{{
-  "summary_1": "...",
-  "summary_2": "...",
-  "summary_3": "..."
-}}
-"""
-
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[
-            {
-                "role": "system",
-                "content": "You are a structured assistant that writes deep but clear insights. Output only the JSON."
-            },
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ],
-        temperature=0.5,
-        max_tokens=500
-    )
-
-    raw_output = response["choices"][0]["message"]["content"]
+    prompt = f"{role_description} Context: '{term1}' and '{term2}'. Output only one concise, profound sentence."
 
     try:
-        return json.loads(raw_output)
-    except json.JSONDecodeError:
-        print("❌ JSON parsing failed. Raw output:", raw_output, flush=True)
-        return {
-            "summary_1": "Error generating Tier 1",
-            "summary_2": "Error generating Tier 2",
-            "summary_3": "Error generating Tier 3"
-        }
+        response = openai.ChatCompletion.create(
+            model="gpt-4o",  # Using 4o for better reasoning
+            messages=[
+                {"role": "system", "content": "You are Clarity, the sister of logic. You strip away matter to find the underlying forces of the universe."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"❌ Error in synthesis: {e}")
+        return "Connection pending..."
+
+def run_clarity_funnel(variables):
+    """
+    The full Logic Funnel. This replaces both old functions.
+    """
+    if not isinstance(variables, list) or len(variables) < 3:
+        return {"error": "Three nouns are required for full synthesis."}
+
+    # Clean the inputs
+    A, B, C = [v.strip() for v in variables[:3]]
+
+    # --- Tier 1: The Base ---
+    ab = get_synthesis(A, B, 1)
+    bc = get_synthesis(B, C, 1)
+    ac = get_synthesis(A, C, 1)
+    
+    # --- Tier 2: The Bridge ---
+    abbc = get_synthesis(ab, bc, 2)
+    bcac = get_synthesis(bc, ac, 2)
+    
+    # --- Tier 3: The Proto-Idea ---
+    proto_idea = get_synthesis(abbc, bcac, 3)
+    
+    return {
+        "tier_1": {"ab": ab, "bc": bc, "ac": ac},
+        "tier_2": {"abbc": abbc, "bcac": bcac},
+        "tier_3": proto_idea
+    }
