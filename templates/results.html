@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <title>Your Clarity Results</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-SHNFKJPC74"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -17,6 +16,7 @@
   </script>
 </head>
 <body class="inner-page-body">
+
   <div class="results-card">
     <h2 class="tier-title">Tier One Context</h2>
     <div class="tier-content" id="tier1"></div>
@@ -32,26 +32,41 @@
     <div class="tier-content" id="tier3"></div>
   </div>
 
-  <!-- 🌟 Radiance Mode Button -->
-  <div class="results-card">
-    <button id="radiance-btn">Visualize Insight (Radiance Mode)</button>
+  <div class="results-card" style="text-align: center;">
+    <button id="radiance-btn" class="back-button" style="margin-top: 0; width: 100%;">
+      Visualize Insight (Radiance Mode)
+    </button>
+    <div id="image-loading" style="display: none; margin-top: 20px; font-style: italic;">
+      Generating your vision...
+    </div>
     <div id="image-container" style="margin-top: 20px;"></div>
   </div>
 
-  <button class="back-button" onclick="window.location.href='home'">← Back to Home</button>
+  <button class="back-button" onclick="window.location.href='/'">← Back to Home</button>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      // Retrieve summaries from localStorage
       const tier1 = localStorage.getItem("summary_1") || "No result found.";
       const tier2 = localStorage.getItem("summary_2") || "No result found.";
       const tier3 = localStorage.getItem("summary_3") || "No result found.";
 
+      // Display the text results
       document.getElementById('tier1').textContent = tier1;
       document.getElementById('tier2').textContent = tier2;
       document.getElementById('tier3').textContent = tier3;
 
-      document.getElementById("radiance-btn").addEventListener("click", async () => {
+      const radianceBtn = document.getElementById("radiance-btn");
+      const loadingDiv = document.getElementById("image-loading");
+      const container = document.getElementById("image-container");
+
+      radianceBtn.addEventListener("click", async () => {
         const prompt = tier3;
+
+        // Show loading state
+        radianceBtn.disabled = true;
+        loadingDiv.style.display = "block";
+        container.innerHTML = "";
 
         try {
           const response = await fetch("https://clarity-api-fi4s.onrender.com/generate-image", {
@@ -60,15 +75,21 @@
             body: JSON.stringify({ prompt })
           });
 
+          if (!response.ok) throw new Error('Image generation failed');
+
           const data = await response.json();
           const imageUrl = data.image_url;
 
-          document.getElementById("image-container").innerHTML = `
-            <img src="${imageUrl}" alt="Radiance Output" style="max-width:100%; border-radius: 12px; margin-top: 10px;" />
+          container.innerHTML = `
+            <img src="${imageUrl}" alt="Radiance Output" 
+                 style="max-width:100%; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);" />
           `;
         } catch (error) {
           console.error("Error generating image:", error);
-          document.getElementById("image-container").textContent = "Sorry, something went wrong creating the image.";
+          container.textContent = "Sorry, something went wrong creating the image. Please try again.";
+        } finally {
+          radianceBtn.disabled = false;
+          loadingDiv.style.display = "none";
         }
       });
     });

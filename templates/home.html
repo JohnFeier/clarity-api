@@ -2,12 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Enter Your Nouns - Clarity</title>
-  <link rel="stylesheet" href="css/style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Enter your nouns to find clarity through our specialized processing engine.">
+  <title>Enter Your Nouns - Clarity</title>
+  
+  <link rel="icon" href="data:,"> 
+  
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet" />
 
-  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-SHNFKJPC74"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -15,46 +20,94 @@
     gtag('js', new Date());
     gtag('config', 'G-SHNFKJPC74');
   </script>
+
+  <style>
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+    #suggested-nouns {
+      min-height: 200px; 
+      margin-top: 2rem;
+      border-top: 1px solid rgba(0,0,0,0.1);
+      padding-top: 1rem;
+    }
+    #suggested-noun-list {
+      list-style: none;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin: 1rem 0;
+    }
+    #suggested-noun-list li {
+      background: #fff;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-weight: bold;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+  </style>
 </head>
 <body class="inner-page-body">
-  <div class="variable-entry-card">
-    <div style="text-align: center;">
-      <h2 class="tier-title">Enter your nouns</h2>
-    </div>
+  <main class="variable-entry-card">
+    <header style="text-align: center;">
+      <h1 class="tier-title">Enter your nouns</h1>
+    </header>
 
     <div class="input-field">
+      <label for="noun1" class="sr-only">First Noun</label>
       <input type="text" id="noun1" placeholder="First noun" />
     </div>
     <div class="input-field">
+      <label for="noun2" class="sr-only">Second Noun</label>
       <input type="text" id="noun2" placeholder="Second noun" />
     </div>
     <div class="input-field">
+      <label for="noun3" class="sr-only">Third Noun</label>
       <input type="text" id="noun3" placeholder="Third noun" />
     </div>
 
-    <button id="activation-button">Find Clarity</button>
-    <p id="loadingMessage" style="display: none; margin-top: 1rem; font-style: italic;">Finding your Clarity...</p>
+    <button id="activation-button" type="button">Find Clarity</button>
+    
+    <p id="loadingMessage" aria-live="polite" style="display: none; margin-top: 1rem; font-style: italic; text-align: center;">
+      Finding your Clarity...
+    </p>
 
-    <div id="suggested-nouns">
+    <section id="suggested-nouns" style="text-align: center;">
       <h2>Suggested Nouns of the Day</h2>
-      <p id="suggested-title"><em></em></p>
+      <p id="suggested-title"><em>Loading daily suggestions...</em></p>
       <ul id="suggested-noun-list"></ul>
-      <button onclick="useSuggestedNouns()">Try These</button>
-    </div>
-  </div>
+      <button class="back-button" onclick="useSuggestedNouns()" type="button" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+        Try These
+      </button>
+    </section>
+  </main>
 
   <script>
-    fetch('https://clarity-api-fi4s.onrender.com/').catch(console.error);
+    const API_BASE_URL = 'https://clarity-api-fi4s.onrender.com';
+
+    // Wake up the API early to reduce cold-start latency
+    fetch(`${API_BASE_URL}/`).catch(() => {});
 
     document.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("activation-button").addEventListener("click", async () => {
+      const activationBtn = document.getElementById("activation-button");
+      const loading = document.getElementById("loadingMessage");
+      
+      activationBtn.addEventListener("click", async () => {
         const noun1 = document.getElementById('noun1').value.trim();
         const noun2 = document.getElementById('noun2').value.trim();
         const noun3 = document.getElementById('noun3').value.trim();
 
         const variables = [noun1, noun2, noun3].filter(Boolean);
         if (variables.length < 2) {
-          alert('Please enter at least two nouns.');
+          alert('Please enter at least two nouns to find clarity.');
           return;
         }
 
@@ -63,54 +116,36 @@
           'event_label': 'User clicked Find Clarity'
         });
 
-        const button = document.getElementById("activation-button");
-        const loading = document.getElementById("loadingMessage");
-        button.disabled = true;
+        // Set UI to loading state
+        activationBtn.disabled = true;
         loading.style.display = "block";
 
         try {
-          const response = await fetch('https://clarity-api-fi4s.onrender.com/process', {
+          const response = await fetch('/process', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ variables })
           });
 
+          if (!response.ok) throw new Error('Server response was not ok');
+
           const data = await response.json();
-          localStorage.setItem("summary_1", data.summary_1);
-          localStorage.setItem("summary_2", data.summary_2);
-          localStorage.setItem("summary_3", data.summary_3);
+          
+          // Clear old data and save new results
+          localStorage.clear(); 
+          localStorage.setItem("summary_1", data.summary_1 || "");
+          localStorage.setItem("summary_2", data.summary_2 || "");
+          localStorage.setItem("summary_3", data.summary_3 || "");
+          
           window.location.href = "results";
         } catch (error) {
           console.error("Fetch error:", error);
-          alert('A network or server error occurred.');
+          alert('The server is warming up or experiencing an error. Please wait a moment and try again.');
         } finally {
-          button.disabled = false;
+          activationBtn.disabled = false;
           loading.style.display = "none";
         }
       });
-
-      const sessionKey = 'hasVisitedNounPage';
-      if (sessionStorage.getItem(sessionKey)) {
-        gtag('event', 'revisit_variable_page', {
-          'event_category': 'engagement',
-          'event_label': 'User returned to enter new nouns'
-        });
-      } else {
-        sessionStorage.setItem(sessionKey, 'true');
-      }
-
-      const stored = localStorage.getItem("suggested_nouns");
-      if (stored) {
-        try {
-          const nouns = JSON.parse(stored);
-          if (nouns.length >= 1) document.getElementById("noun1").value = nouns[0] || "";
-          if (nouns.length >= 2) document.getElementById("noun2").value = nouns[1] || "";
-          if (nouns.length >= 3) document.getElementById("noun3").value = nouns[2] || "";
-        } catch (err) {
-          console.error("Error parsing suggested_nouns:", err);
-        }
-        localStorage.removeItem("suggested_nouns");
-      }
 
       displaySuggestedSet();
     });
@@ -124,8 +159,7 @@
     ];
 
     function getDailySet() {
-      const today = new Date();
-      const dayIndex = today.getDate() % suggestedSets.length;
+      const dayIndex = new Date().getDate() % suggestedSets.length;
       return suggestedSets[dayIndex];
     }
 
@@ -143,9 +177,10 @@
 
     function useSuggestedNouns() {
       const set = getDailySet();
-      document.getElementById("noun1").value = set.nouns[0];
-      document.getElementById("noun2").value = set.nouns[1];
-      document.getElementById("noun3").value = set.nouns[2];
+      set.nouns.forEach((noun, i) => {
+        const el = document.getElementById(`noun${i+1}`);
+        if (el) el.value = noun;
+      });
     }
   </script>
 </body>
