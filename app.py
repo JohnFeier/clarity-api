@@ -9,7 +9,8 @@ from context_engine import run_clarity_funnel
 from radiant_clarity_engine import run_engines, RADIANT_SIGNATURES
 
 # 2. INITIALIZE APP & LOAD API KEY
-app = Flask(__name__)
+import os
+app = Flask(__name__, static_folder='static', template_folder='templates')
 load_dotenv()
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 
