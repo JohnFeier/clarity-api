@@ -9,7 +9,6 @@ from context_engine import run_clarity_funnel
 from radiant_clarity_engine import run_engines, RADIANT_SIGNATURES
 
 # 2. INITIALIZE APP & LOAD API KEY
-import os
 app = Flask(__name__, static_folder='static', template_folder='templates')
 load_dotenv()
 openai.api_key = os.environ.get("OPENAI_API_KEY")
@@ -39,7 +38,7 @@ def home():
 def results():
     return render_template("results.html")
 
-# 5. THE MAIN PROCESS ROUTE - This handles the "Process" button
+# 5. THE MAIN PROCESS ROUTE
 @app.route('/process', methods=['POST', 'OPTIONS'])
 def process():
     # Handle the browser's security "handshake" (OPTIONS)
@@ -58,21 +57,30 @@ def process():
         if not variables or len(variables) < 3:
             return jsonify({"error": "Three nouns are required."}), 400
 
-        # Run the Logic Funnel (Clarity)
+        # --- STEP 1: Run the Logic Funnel (Clarity) ---
         funnel_results = run_clarity_funnel(variables)
+        
+        # --- STEP 2: Format strings for the Frontend ---
+        # We extract the specific syntheses from the nested dictionaries
+        t1_combined = f"Intersections: {funnel_results['tier_1']['ab']} | {funnel_results['tier_1']['bc']} | {funnel_results['tier_1']['ac']}"
+        t2_combined = f"Syntheses: {funnel_results['tier_2']['abbc']} and {funnel_results['tier_2']['bcac']}"
         proto_idea = funnel_results.get("tier_3", "Synthesis incomplete.")
         
-        # Run the Radiance Engine
+        # --- STEP 3: Run the Radiance Engine ---
         noun1, noun2, noun3 = [v.strip() for v in variables[:3]]
         selected_signature = RADIANT_SIGNATURES[0] 
-        radiant_output = run_engines(noun1, noun2, noun3, selected_signature)["Radiance"]
+        
+        # We execute the poetic interpretation based on the nouns
+        radiance_data = run_engines(noun1, noun2, noun3, selected_signature)
+        radiance_output = radiance_data.get("Radiance", "Radiance insight pending.")
 
-        # Send the results back to the website
+        # --- STEP 4: SEND TO FRONTEND ---
+        # These keys now match the summary_1, 2, 3 pattern in results.html
         return jsonify({
-            "summary_1": proto_idea,
-            "tier_1": funnel_results.get("tier_1"),
-            "tier_2": funnel_results.get("tier_2"),
-            "radiance": radiant_output
+            "summary_1": t1_combined,  
+            "summary_2": t2_combined,  
+            "summary_3": proto_idea,   
+            "radiance": radiance_output 
         }), 200
 
     except Exception as e:
