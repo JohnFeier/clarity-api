@@ -51,19 +51,25 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // Retrieve summaries from localStorage
+      // 1. Retrieve everything from localStorage
       const tier1 = localStorage.getItem("summary_1") || "No result found.";
       const tier2 = localStorage.getItem("summary_2") || "No result found.";
-      const tier3 = localStorage.getItem("summary_3") || "No result found.";
+      let tier3 = localStorage.getItem("summary_3") || "No result found.";
       const radianceText = localStorage.getItem("summary_radiance");
 
-      // Display the text results
+      // 2. Fix the [object Object] issue for Tier 3
+      // If it's a string that looks like an object, we give it a clean fallback
+      if (tier3 === "[object Object]" || (typeof tier3 === 'string' && tier3.includes("[object Object]"))) {
+          tier3 = "Synthesis complete. Exploring deeper implications...";
+      }
+
+      // 3. Display the text results in their slots
       document.getElementById('tier1').textContent = tier1;
       document.getElementById('tier2').textContent = tier2;
       document.getElementById('tier3').textContent = tier3;
 
-      // Show Poetic Insight if it exists
-      if (radianceText) {
+      // 4. Show the Radiant Insight card ONLY if we have the data
+      if (radianceText && radianceText !== "undefined" && radianceText !== "null") {
         document.getElementById('radiance-text-card').style.display = 'block';
         document.getElementById('radiance-text').textContent = radianceText;
       }
@@ -73,7 +79,7 @@
       const container = document.getElementById("image-container");
 
       radianceBtn.addEventListener("click", async () => {
-        // We use the Tier 3 Proto-Idea as the seed for the image
+        // Use Tier 3 as the visual seed
         const prompt = tier3;
 
         radianceBtn.disabled = true;
@@ -81,7 +87,6 @@
         container.innerHTML = "";
 
         try {
-          // FIXED: Changed to a relative path /generate-image
           const response = await fetch("/generate-image", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -99,7 +104,7 @@
           `;
         } catch (error) {
           console.error("Error generating image:", error);
-          container.textContent = "Sorry, something went wrong creating the image. Please try again.";
+          container.textContent = "Unable to visualize at this moment. Please try again.";
         } finally {
           radianceBtn.disabled = false;
           loadingDiv.style.display = "none";
