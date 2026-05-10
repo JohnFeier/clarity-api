@@ -7,14 +7,12 @@ print("🧪 context_engine.py loaded...", flush=True)
 
 # Load environment variables
 load_dotenv()
-print("🔑 .env loaded", flush=True)
 
 try:
     openai.api_key = os.getenv("OPENAI_API_KEY")
     print("✅ OpenAI API key set", flush=True)
 except Exception as e:
     print("❌ Failed to set OpenAI API key:", str(e), flush=True)
-
 
 def get_synthesis(term1, term2, depth_level):
     """
@@ -32,7 +30,8 @@ def get_synthesis(term1, term2, depth_level):
 
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-4o",  # Using 4o for better reasoning
+            # UPDATED: Using 'mini' for 3x faster response times
+            model="gpt-4o-mini", 
             messages=[
                 {"role": "system", "content": "You are Clarity, the sister of logic. You strip away matter to find the underlying forces of the universe."},
                 {"role": "user", "content": prompt}
@@ -46,7 +45,8 @@ def get_synthesis(term1, term2, depth_level):
 
 def run_clarity_funnel(variables):
     """
-    The full Logic Funnel. This replaces both old functions.
+    The full Logic Funnel. 
+    Processes 3 nouns through a triangular synthesis path.
     """
     if not isinstance(variables, list) or len(variables) < 3:
         return {"error": "Three nouns are required for full synthesis."}
@@ -54,18 +54,19 @@ def run_clarity_funnel(variables):
     # Clean the inputs
     A, B, C = [v.strip() for v in variables[:3]]
 
-    # --- Tier 1: The Base ---
+    # --- Tier 1: The Base (3 pairs) ---
     ab = get_synthesis(A, B, 1)
     bc = get_synthesis(B, C, 1)
     ac = get_synthesis(A, C, 1)
     
-    # --- Tier 2: The Bridge ---
+    # --- Tier 2: The Bridge (2 syntheses) ---
     abbc = get_synthesis(ab, bc, 2)
     bcac = get_synthesis(bc, ac, 2)
     
-    # --- Tier 3: The Proto-Idea ---
+    # --- Tier 3: The Proto-Idea (1 final synthesis) ---
     proto_idea = get_synthesis(abbc, bcac, 3)
     
+    # Return keys that app.py is expecting
     return {
         "tier_1": {"ab": ab, "bc": bc, "ac": ac},
         "tier_2": {"abbc": abbc, "bcac": bcac},

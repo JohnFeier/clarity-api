@@ -52,13 +52,15 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       // 1. Retrieve everything from localStorage
+      // Ensure these match exactly what home.html saves
       const tier1 = localStorage.getItem("summary_1") || "No result found.";
       const tier2 = localStorage.getItem("summary_2") || "No result found.";
       let tier3 = localStorage.getItem("summary_3") || "No result found.";
-      const radianceText = localStorage.getItem("summary_radiance");
+      
+      // FIXED: Changed "summary_radiance" to "radiance"
+      const radianceText = localStorage.getItem("radiance"); 
 
       // 2. Fix the [object Object] issue for Tier 3
-      // If it's a string that looks like an object, we give it a clean fallback
       if (tier3 === "[object Object]" || (typeof tier3 === 'string' && tier3.includes("[object Object]"))) {
           tier3 = "Synthesis complete. Exploring deeper implications...";
       }
@@ -79,7 +81,7 @@
       const container = document.getElementById("image-container");
 
       radianceBtn.addEventListener("click", async () => {
-        // Use Tier 3 as the visual seed
+        // Use Tier 3 as the visual seed for the DALL-E prompt
         const prompt = tier3;
 
         radianceBtn.disabled = true;
@@ -111,6 +113,6 @@
         }
       });
     });
-  </script>
+</script>
 </body>
 </html>

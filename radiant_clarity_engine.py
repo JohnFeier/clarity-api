@@ -1,12 +1,10 @@
 import openai
 import os
-from typing import List, Tuple
 
+# Initialize API Key
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 
-NounTriplet = Tuple[str, str, str]
-
-# --- Radiant Signatures ---
+# --- Radiant Signatures (Your Interpretive Lenses) ---
 RADIANT_SIGNATURES = [
     {
         "name": "Mirror of Becoming",
@@ -40,84 +38,39 @@ RADIANT_SIGNATURES = [
     }
 ]
 
-# --- Preprocessing ---
-def preprocess_nouns(a: str, b: str, c: str):
-    pairs = [(a, b), (b, c), (a, c)]
-    triplet = (a, b, c)
-    return pairs, triplet
-
-# --- Clarity Logic (Core Intersection Engine) ---
-def literal_intersection(noun_pair: Tuple[str, str]) -> str:
-    # This acts as the stub for the 3,500 noun semantic map integration
-    return f"Intersection of '{noun_pair[0]}' and '{noun_pair[1]}'"
-
-def synthesize_clarity_summary(a_b, b_c, a_c, abc) -> dict:
-    return {
-        "Tier 1": abc,
-        "Tier 2": [a_b, b_c, a_c],
-        "Tier 3": f"Broader context from A+B+C: {abc}"
-    }
-
-def clarity_engine(pairs: List[Tuple[str, str]], triplet: NounTriplet) -> dict:
-    a_b = literal_intersection(pairs[0])
-    b_c = literal_intersection(pairs[1])
-    a_c = literal_intersection(pairs[2])
-    abc = literal_intersection(triplet)
-    return synthesize_clarity_summary(a_b, b_c, a_c, abc)
-
-# --- Radiance Logic ---
-def synthesize_radiant_insight(triplet: NounTriplet, signature: dict) -> dict:
+def run_radiance_engine(noun1, noun2, noun3, signature):
+    """
+    Synthesizes three nouns into a poetic insight using a specific signature.
+    """
     prompt = f"""
-Interpret the relationship between the concepts **{triplet[0]}**, **{triplet[1]}**, and **{triplet[2]}**
-using the following interpretive lens:
+    Interpret the relationship between the concepts **{noun1}**, **{noun2}**, and **{noun3}** 
+    using the following interpretive lens:
 
-- Perspective: {signature['perspective']}
-- Time Orientation: {signature['time']}
-- Agency: {signature['agency']}
-- Scale: {signature['scale']}
-- Emotional Tone: {signature['emotion']}
-- Modality: {signature['modality']}
-- Reasoning Style: {signature['logic']}
+    - Signature: {signature['name']}
+    - Perspective: {signature['perspective']}
+    - Time Orientation: {signature['time']}
+    - Emotional Tone: {signature['emotion']}
+    - Reasoning Style: {signature['logic']}
 
-Speak poetically, metaphorically, or archetypally. Structure your output in three tiers:
-1. A one-line metaphor
-2. An expanded reflection
-3. A philosophical implication
-"""
+    Speak poetically, metaphorically, or archetypally. Structure your output in three short parts:
+    1. A one-line metaphor.
+    2. An expanded reflection.
+    3. A philosophical implication.
+    """
 
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-4o-mini",  # Fast and efficient for poetic text
             messages=[
-                {"role": "system", "content": "You are a poetic philosopher."},
+                {"role": "system", "content": "You are a poetic philosopher and master of metaphor."},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.9,
-            max_tokens=300
+            temperature=0.85,
+            max_tokens=350
         )
-        full_output = response['choices'][0]['message']['content']
-        return {
-            "Signature Name": signature.get("name", "Unnamed Signature"),
-            "Prompt Used": prompt,
-            "Radiance": full_output.strip()
-        }
+        
+        return response.choices[0].message.content.strip()
 
     except Exception as e:
-        print("🔥 Error in Radiance GPT call:", str(e), flush=True)
-        return {
-            "error": "Radiance failed to generate insight.",
-            "exception": str(e)
-        }
-
-def radiance_engine(triplet: NounTriplet, signature: dict) -> dict:
-    return synthesize_radiant_insight(triplet, signature)
-
-# --- Run Both Engines (Main Entry Point) ---
-def run_engines(a: str, b: str, c: str, signature: dict) -> dict:
-    pairs, triplet = preprocess_nouns(a, b, c)
-    clarity_output = clarity_engine(pairs, triplet)
-    radiance_output = radiance_engine(triplet, signature)
-    return {
-        "Clarity": clarity_output,
-        "Radiance": radiance_output
-    }
+        print(f"🔥 Error in Radiance Engine: {str(e)}")
+        return "The radiance is currently clouded. Please try again."
