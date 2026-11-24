@@ -12,7 +12,7 @@
     body {
       background-color: #008080;
       margin: 0;
-      height: 100vh;
+      min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -26,18 +26,24 @@
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
       text-align: center;
       width: 400px;
+      max-width: 90vw;
     }
 
-    svg {
-      width: 300px;
-      height: 300px;
-      margin-bottom: 1rem;
+    .twins-medallion {
+      width: 210px;
+      height: 210px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+      margin: 0 auto 1rem auto;
+      border: 4px solid #008080;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
     }
 
     .logo-text {
       font-family: 'Pacifico', cursive;
       font-size: 34px;
-      margin-top: 10px;
+      margin-top: 6px;
       margin-bottom: 12px;
     }
 
@@ -50,6 +56,7 @@
     }
 
     .enter-button {
+      display: inline-block;
       background-color: #008080;
       color: white;
       border: none;
@@ -76,11 +83,11 @@
 </head>
 <body>
   <div class="placard">
-    <svg viewBox="0 0 240 240">
-      <circle cx="80" cy="120" r="50" fill="lightblue" fill-opacity="0.6"/>
-      <circle cx="160" cy="120" r="50" fill="deepskyblue" fill-opacity="0.6"/>
-      <circle cx="120" cy="60" r="50" fill="darkcyan" fill-opacity="0.6"/>
-    </svg>
+    <img
+      src="{{ url_for('static', filename='images/Gemini_Generated_Image_xphc24xphc24xphc.jpg') }}"
+      alt="Clarity and Radiance"
+      class="twins-medallion"
+    />
     <div class="logo-text">Clarity and Radiance</div>
     <p class="twin-subtitle">Twin voices working in harmony—<strong>Clarity</strong> weaves the synthesis of words, while <strong>Radiance</strong> illuminates the vision.</p>
     <a href="/home" class="enter-button">Enter</a>
