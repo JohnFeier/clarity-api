@@ -93,12 +93,16 @@ def generate_image():
         prompt = data.get('prompt', 'A cosmic visualization of clarity')
         
         response = openai.Image.create(
-            model="dall-e-3",
+            model="gpt-image-2",
             prompt=f"A cinematic, high-detail metaphysical visualization of: {prompt}",
             n=1,
             size="1024x1024"
         )
-        image_url = response['data'][0]['url']
+        image_data = response['data'][0]
+        if 'url' in image_data and image_data['url']:
+            image_url = image_data['url']
+        else:
+            image_url = f"data:image/png;base64,{image_data['b64_json']}"
         return jsonify({"image_url": image_url})
     except Exception as e:
         print(f"🔥 Image Error: {str(e)}", flush=True)
