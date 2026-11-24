@@ -14,9 +14,9 @@ app = Flask(__name__, static_folder='static', template_folder='templates')
 load_dotenv()
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 
-# 3. SECURITY (CORS) 
+# 3. SECURITY (CORS)
 # This prevents the "Blocked by CORS policy" errors you saw earlier
-CORS(app, resources={r"/*": {"origins": "*"}}) 
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 @app.after_request
 def add_cors_headers(response):
@@ -59,26 +59,25 @@ def process():
 
         # --- STEP 1: Run the Logic Funnel (from context_engine.py) ---
         funnel_results = run_clarity_funnel(variables)
-        
+
         # --- STEP 2: Format strings for the Frontend ---
         # We combine the intersections so they fit into the 3-Tier display
         t1_combined = f"Intersections: {funnel_results['tier_1']['ab']} | {funnel_results['tier_1']['bc']} | {funnel_results['tier_1']['ac']}"
         t2_combined = f"Syntheses: {funnel_results['tier_2']['abbc']} and {funnel_results['tier_2']['bcac']}"
         proto_idea = funnel_results.get("tier_3", "Synthesis incomplete.")
-        
+
         # --- STEP 3: Run the Radiance Engine (from radiant_clarity_engine.py) ---
         noun1, noun2, noun3 = [v.strip() for v in variables[:3]]
         selected_signature = RADIANT_SIGNATURES[0] # Defaulting to 'Mirror of Becoming'
-        
         radiance_output = run_radiance_engine(noun1, noun2, noun3, selected_signature)
 
         # --- STEP 4: SEND TO FRONTEND ---
         # These keys match the localStorage.getItem calls in your HTML
         return jsonify({
-            "summary_1": t1_combined,  
-            "summary_2": t2_combined,  
-            "summary_3": proto_idea,   
-            "radiance": radiance_output  
+            "summary_1": t1_combined,
+            "summary_2": t2_combined,
+            "summary_3": proto_idea,
+            "radiance": radiance_output
         }), 200
 
     except Exception as e:
@@ -94,6 +93,7 @@ def generate_image():
         prompt = data.get('prompt', 'A cosmic visualization of clarity')
         
         response = openai.Image.create(
+            model="dall-e-3",
             prompt=f"A cinematic, high-detail metaphysical visualization of: {prompt}",
             n=1,
             size="1024x1024"
