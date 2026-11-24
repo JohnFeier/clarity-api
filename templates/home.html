@@ -91,12 +91,44 @@
   </main>
 
   <script>
-    // Remove the API_BASE_URL entirely. Use relative paths.
-    
+    const suggestedSets = [
+      { title: "Mind & Meaning", nouns: ["Memory", "Silence", "Horizon"] },
+      { title: "Systems & Change", nouns: ["Order", "Entropy", "Pattern"] },
+      { title: "Human Experience", nouns: ["Solitude", "Belonging", "Purpose"] },
+      { title: "Time & Cycles", nouns: ["Momentum", "Stillness", "Renewal"] },
+      { title: "Creation & Form", nouns: ["Structure", "Intuition", "Synthesis"] },
+      { title: "Society & Perspective", nouns: ["Tradition", "Disruption", "Consensus"] },
+      { title: "Nature & Perception", nouns: ["Shadow", "Clarity", "Resonance"] }
+    ];
+
+    let currentSuggestedSet = null;
+
+    function displaySuggestedSet() {
+      const dayIndex = new Date().getDate() % suggestedSets.length;
+      currentSuggestedSet = suggestedSets[dayIndex];
+
+      const titleEl = document.getElementById("suggested-title");
+      const listEl = document.getElementById("suggested-noun-list");
+
+      if (titleEl && listEl && currentSuggestedSet) {
+        titleEl.textContent = currentSuggestedSet.title;
+        listEl.innerHTML = currentSuggestedSet.nouns
+          .map(noun => `<li>${noun}</li>`)
+          .join("");
+      }
+    }
+
+    function useSuggestedNouns() {
+      if (!currentSuggestedSet) return;
+      document.getElementById("noun1").value = currentSuggestedSet.nouns[0] || "";
+      document.getElementById("noun2").value = currentSuggestedSet.nouns[1] || "";
+      document.getElementById("noun3").value = currentSuggestedSet.nouns[2] || "";
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
       const activationBtn = document.getElementById("activation-button");
       const loading = document.getElementById("loadingMessage");
-      
+
       activationBtn.addEventListener("click", async () => {
         const noun1 = document.getElementById('noun1').value.trim();
         const noun2 = document.getElementById('noun2').value.trim();
@@ -112,7 +144,6 @@
         loading.style.display = "block";
 
         try {
-          // CHANGE: Fetch from '/process' instead of the full URL
           const response = await fetch('/process', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -122,14 +153,14 @@
           if (!response.ok) throw new Error('Server response was not ok');
 
           const data = await response.json();
-          
-          localStorage.clear(); 
-          // Match the keys your app.py returns
-          localStorage.setItem("summary_1", data.summary_1 || ""); 
-          localStorage.setItem("summary_2", data.tier_1 || ""); // Mapping to your app.py keys
-          localStorage.setItem("summary_3", data.radiance || ""); 
-          
-          window.location.href = "/results"; // Use the route defined in app.py
+
+          localStorage.clear();
+          localStorage.setItem("summary_1", data.summary_1 || "");
+          localStorage.setItem("summary_2", data.summary_2 || "");
+          localStorage.setItem("summary_3", data.summary_3 || "");
+          localStorage.setItem("radiance", data.radiance || "");
+
+          window.location.href = "/results";
         } catch (error) {
           console.error("Fetch error:", error);
           alert('Network error. Please try again.');
@@ -141,8 +172,6 @@
 
       displaySuggestedSet();
     });
-    
-    // ... keep your suggestedSets and display functions as they are ...
-</script>
+  </script>
 </body>
 </html>
