@@ -16,17 +16,16 @@
   </script>
 
   <style>
-    .engine-badge {
-      display: inline-block;
-      font-size: 0.75rem;
-      font-weight: 600;
+    .stage-heading {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 700;
       letter-spacing: 0.04em;
       text-transform: uppercase;
       color: #005f5f;
-      background-color: rgba(0, 128, 128, 0.12);
-      padding: 4px 10px;
-      border-radius: 999px;
-      margin-bottom: 10px;
+      margin: 0 0 12px 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(0, 128, 128, 0.2);
     }
 
     .tier-three-highlight {
@@ -38,7 +37,7 @@
     .action-row {
       display: flex;
       gap: 10px;
-      margin-top: 14px;
+      margin-top: 16px;
       flex-wrap: wrap;
     }
 
@@ -57,7 +56,7 @@
     }
 
     .radiance-subtext {
-      font-size: 0.9rem;
+      font-size: 0.92rem;
       color: #2c4a4a;
       margin: 0 0 14px 0;
     }
@@ -79,20 +78,17 @@
 <body class="inner-page-body">
 
   <div class="results-card">
-    <span class="engine-badge">Clarity • Tier 1 — Pairwise Intersections</span>
-    <h2 class="tier-title">Tier One Context</h2>
+    <h2 class="stage-heading">Clarity • Tier 1 — Pairwise Intersections</h2>
     <div class="tier-content" id="tier1"></div>
   </div>
 
   <div class="results-card">
-    <span class="engine-badge">Clarity • Tier 2 — Converging Tension</span>
-    <h2 class="tier-title">Tier Two Context</h2>
+    <h2 class="stage-heading">Clarity • Tier 2 — Converging Tension</h2>
     <div class="tier-content" id="tier2"></div>
   </div>
 
   <div class="results-card">
-    <span class="engine-badge">Clarity • Tier 3 — Core Synthesis</span>
-    <h2 class="tier-title">Tier Three Context</h2>
+    <h2 class="stage-heading">Clarity • Tier 3 — Core Synthesis</h2>
     <div class="tier-content tier-three-highlight" id="tier3"></div>
     <div class="action-row">
       <button type="button" id="copy-btn" class="secondary-button">Copy All Tiers</button>
@@ -100,7 +96,7 @@
   </div>
 
   <div class="results-card" style="text-align: center;">
-    <span class="engine-badge">Radiance • Visual Interpretation</span>
+    <h2 class="stage-heading" style="text-align: left;">Radiance • Visual Interpretation</h2>
     <p class="radiance-subtext">Let Radiance paint a visual scene directly from Clarity's Tier Three synthesis.</p>
     <button id="radiance-btn" class="back-button" style="margin-top: 0; width: 100%;">
       Generate Radiance
@@ -127,10 +123,21 @@
       document.getElementById('tier2').textContent = tier2;
       document.getElementById('tier3').textContent = tier3;
 
+      const radianceBtn = document.getElementById("radiance-btn");
+      const loadingDiv = document.getElementById("image-loading");
+      const container = document.getElementById("image-container");
+
+      // Prevent accidental image generation if visited without synthesis results
+      if (tier3 === "No result found.") {
+        radianceBtn.disabled = true;
+        radianceBtn.style.opacity = "0.5";
+        radianceBtn.style.cursor = "not-allowed";
+      }
+
       // One-click copy for writers saving notes
       const copyBtn = document.getElementById("copy-btn");
       copyBtn.addEventListener("click", async () => {
-        const formatted = `TIER ONE CONTEXT:\n${tier1}\n\nTIER TWO CONTEXT:\n${tier2}\n\nTIER THREE SYNTHESIS:\n${tier3}`;
+        const formatted = `TIER 1 — PAIRWISE INTERSECTIONS:\n${tier1}\n\nTIER 2 — CONVERGING TENSION:\n${tier2}\n\nTIER 3 — CORE SYNTHESIS:\n${tier3}`;
         try {
           await navigator.clipboard.writeText(formatted);
           copyBtn.textContent = "Copied!";
@@ -139,10 +146,6 @@
           copyBtn.textContent = "Copy failed";
         }
       });
-
-      const radianceBtn = document.getElementById("radiance-btn");
-      const loadingDiv = document.getElementById("image-loading");
-      const container = document.getElementById("image-container");
 
       radianceBtn.addEventListener("click", async () => {
         const prompt = tier3;
