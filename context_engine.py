@@ -39,8 +39,18 @@ def get_synthesis(prompt, max_tokens=220):
         return "Connection pending..."
 
 
-def run_clarity_funnel(noun1, noun2, noun3):
-    profiles = lookup_nouns([noun1, noun2, noun3])
+def run_clarity_funnel(noun1, noun2=None, noun3=None):
+    # Support both run_clarity_funnel(["a", "b", "c"]) and run_clarity_funnel("a", "b", "c")
+    if isinstance(noun1, (list, tuple)):
+        if len(noun1) < 3:
+            raise ValueError("run_clarity_funnel requires 3 nouns.")
+        nouns = list(noun1[:3])
+    else:
+        if noun2 is None or noun3 is None:
+            raise ValueError("run_clarity_funnel requires 3 nouns.")
+        nouns = [noun1, noun2, noun3]
+
+    profiles = lookup_nouns(nouns)
     p1, p2, p3 = profiles[0], profiles[1], profiles[2]
     coord_brief = _format_coordinate_brief(profiles)
 
