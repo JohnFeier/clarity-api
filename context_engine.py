@@ -1,74 +1,84 @@
-import openai
 import os
-import json
-from dotenv import load_dotenv
+import openai
+from taxonomy_engine import lookup_nouns, log_interaction
 
-print("🧪 context_engine.py loaded...", flush=True)
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# Load environment variables
-load_dotenv()
 
-try:
-    openai.api_key = os.getenv("OPENAI_API_KEY")
-    print("✅ OpenAI API key set", flush=True)
-except Exception as e:
-    print("❌ Failed to set OpenAI API key:", str(e), flush=True)
+def _format_coordinate_brief(noun_profiles):
+    lines = []
+    for item in noun_profiles:
+        domain_str = ", ".join(item["domains"])
+        bridge_note = " [multi-domain bridge noun — navigate its competing neighborhoods]" if item["is_bridge"] else ""
+        lines.append(f"- {item['noun']} -> Domain(s): {domain_str}{bridge_note}")
+    return "\n".join(lines)
 
-def get_synthesis(term1, term2, depth_level):
-    """
-    The 'Chewing' Mechanism: 
-    This function makes the actual call to OpenAI for each pair.
-    """
-    if depth_level == 1:
-        role_description = "Identify the most fundamental shared characteristic between these two nouns."
-    elif depth_level == 2:
-        role_description = "Synthesize these two conceptual themes into a single, deeper proto-idea."
-    else:
-        role_description = "Distill these proto-ideas into one final, universal 'Fundamental Force'."
 
-    prompt = f"{role_description} Context: '{term1}' and '{term2}'. Output only one concise, profound sentence."
-
+def get_synthesis(prompt, max_tokens=220):
     try:
         response = openai.ChatCompletion.create(
-            # UPDATED: Using 'mini' for 3x faster response times
-            model="gpt-4o-mini", 
+            model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are Clarity, the sister of logic. You strip away matter to find the underlying forces of the universe."},
+                {
+                    "role": "system",
+                    "content": (
+                        "You are Clarity, the analytical synthesis engine of Context Finder. "
+                        "You reason inside a structured 31-domain semantic map (the Nominal Universe). "
+                        "Use each noun's assigned domain coordinates to escape clichés and uncover non-obvious structural connections. "
+                        "Write crisp, objective, insightful prose without fluff."
+                    )
+                },
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.7
+            temperature=0.7,
+            max_tokens=max_tokens
         )
-        return response.choices[0].message.content.strip()
+        return response.choices[0].message["content"].strip()
     except Exception as e:
-        print(f"❌ Error in synthesis: {e}")
+        print(f"[Clarity Engine Error]: {e}")
         return "Connection pending..."
 
-def run_clarity_funnel(variables):
-    """
-    The full Logic Funnel. 
-    Processes 3 nouns through a triangular synthesis path.
-    """
-    if not isinstance(variables, list) or len(variables) < 3:
-        return {"error": "Three nouns are required for full synthesis."}
 
-    # Clean the inputs
-    A, B, C = [v.strip() for v in variables[:3]]
+def run_clarity_funnel(noun1, noun2, noun3):
+    profiles = lookup_nouns([noun1, noun2, noun3])
+    p1, p2, p3 = profiles[0], profiles[1], profiles[2]
+    coord_brief = _format_coordinate_brief(profiles)
 
-    # --- Tier 1: The Base (3 pairs) ---
-    ab = get_synthesis(A, B, 1)
-    bc = get_synthesis(B, C, 1)
-    ac = get_synthesis(A, C, 1)
-    
-    # --- Tier 2: The Bridge (2 syntheses) ---
-    abbc = get_synthesis(ab, bc, 2)
-    bcac = get_synthesis(bc, ac, 2)
-    
-    # --- Tier 3: The Proto-Idea (1 final synthesis) ---
-    proto_idea = get_synthesis(abbc, bcac, 3)
-    
-    # Return keys that app.py is expecting
+    # Tier 1: Pairwise intersections grounded in Kumu domain neighborhoods (3–4 sentences)
+    tier_1_prompt = (
+        f"Semantic Map Coordinates:\n{coord_brief}\n\n"
+        f"In 3 concise sentences, map the pairwise intersections between:\n"
+        f"1) '{p1['noun']}' ({', '.join(p1['domains'])}) and '{p2['noun']}' ({', '.join(p2['domains'])})\n"
+        f"2) '{p2['noun']}' ({', '.join(p2['domains'])}) and '{p3['noun']}' ({', '.join(p3['domains'])})\n"
+        f"3) '{p1['noun']}' ({', '.join(p1['domains'])}) and '{p3['noun']}' ({', '.join(p3['domains'])})\n"
+        "Show how their domain neighborhoods collide."
+    )
+    tier_1 = get_synthesis(tier_1_prompt, max_tokens=220)
+
+    # Tier 2: Converging tension across all three domains (2 sentences)
+    tier_2_prompt = (
+        f"Semantic Map Coordinates:\n{coord_brief}\n\n"
+        f"Pairwise Intersections:\n{tier_1}\n\n"
+        "Distill this into exactly 2 sentences that reveal the central structural tension or hidden dynamic "
+        "where all three domains converge."
+    )
+    tier_2 = get_synthesis(tier_2_prompt, max_tokens=140)
+
+    # Tier 3: Final crystalline synthesis — shortest and sharpest (1 sentence, ideal for Radiance)
+    tier_3_prompt = (
+        f"Semantic Map Coordinates:\n{coord_brief}\n\n"
+        f"Converging Tension:\n{tier_2}\n\n"
+        "Synthesize this into ONE single, vivid, memorable sentence (under 28 words) that captures the deepest "
+        "universal truth connecting all three concepts."
+    )
+    tier_3 = get_synthesis(tier_3_prompt, max_tokens=75)
+
+    # Log the three-noun and domain collision into interactions.db
+    log_interaction(profiles, tier_1, tier_2, tier_3)
+
     return {
-        "tier_1": {"ab": ab, "bc": bc, "ac": ac},
-        "tier_2": {"abbc": abbc, "bcac": bcac},
-        "tier_3": proto_idea
+        "tier_1": tier_1,
+        "tier_2": tier_2,
+        "tier_3": tier_3,
+        "taxonomy": profiles
     }
