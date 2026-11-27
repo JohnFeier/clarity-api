@@ -1,6 +1,6 @@
 import os
 import openai
-from taxonomy_engine import lookup_nouns, log_interaction
+from taxonomy_engine import VERTICAL_OPERATORS, lookup_nouns, log_interaction
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
@@ -37,6 +37,44 @@ def get_synthesis(prompt, max_tokens=120):
     except Exception as e:
         print(f"[Clarity Engine Error]: {e}")
         return "Connection pending..."
+
+
+def _classify_vertical_operators(coord_brief, tier_3):
+    """Classifies the collision's dominant force-vectors into Primary and Secondary Vertical Verb Operators."""
+    ops_list = ", ".join(VERTICAL_OPERATORS)
+    prompt = (
+        f"Horizontal Coordinates:\n{coord_brief}\n\n"
+        f"Crystalline Synthesis:\n{tier_3}\n\n"
+        f"Select the PRIMARY and SECONDARY Vertical Verb Operators from this exact list:\n{ops_list}\n\n"
+        "Definitions:\n"
+        "- FORGE: creation, synthesis, birth of new structure\n"
+        "- ERODE: decay, dissolution, hollowing out\n"
+        "- BIND: integration, alignment, trust, stabilization\n"
+        "- COLLIDE: friction, disruption, acute clash\n"
+        "- TRANSMIT: diffusion, exchange, amplification across boundaries\n"
+        "- CONTAIN: constraint, governance, regulation, resistance\n"
+        "- METABOLIZE: adaptation, reshaping, absorbing shock into evolution\n"
+        "- ENDURE: continuity, cyclical recurrence, deep inertia\n\n"
+        "Output ONLY two comma-separated uppercase operator names (e.g., METABOLIZE, FORGE)."
+    )
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Output only two valid uppercase operator names separated by a comma."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.0,
+            max_tokens=20
+        )
+        raw = response.choices[0].message["content"].strip().upper()
+        parts = [p.strip() for p in raw.split(",") if p.strip() in VERTICAL_OPERATORS]
+        primary = parts[0] if len(parts) >= 1 else "FORGE"
+        secondary = parts[1] if len(parts) >= 2 and parts[1] != primary else ""
+        return primary, secondary
+    except Exception as e:
+        print(f"[Clarity Operator Tagging Error]: {e}")
+        return "FORGE", ""
 
 
 def run_clarity_funnel(noun1, noun2=None, noun3=None):
@@ -97,10 +135,18 @@ def run_clarity_funnel(noun1, noun2=None, noun3=None):
         max_tokens=80
     )
 
-    # Log the three-noun and domain collision into interactions.db
+    # Tag the vertical force-vectors and log the full (X, Y) coordinate into interactions.db
+    primary_op, secondary_op = _classify_vertical_operators(coord_brief, tier_3)
     tier_1_log = f"AB: {ab} | BC: {bc} | AC: {ac}"
     tier_2_log = f"ABBC: {abbc} | BCAC: {bcac}"
-    log_interaction(profiles, tier_1_log, tier_2_log, tier_3)
+    log_interaction(
+        profiles,
+        tier_1_log,
+        tier_2_log,
+        tier_3,
+        primary_operator=primary_op,
+        secondary_operator=secondary_op
+    )
 
     return {
         "tier_1": {
@@ -113,5 +159,9 @@ def run_clarity_funnel(noun1, noun2=None, noun3=None):
             "bcac": bcac
         },
         "tier_3": tier_3,
-        "taxonomy": profiles
+        "taxonomy": profiles,
+        "operators": {
+            "primary": primary_op,
+            "secondary": secondary_op
+        }
     }
