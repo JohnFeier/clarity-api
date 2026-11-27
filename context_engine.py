@@ -25,7 +25,7 @@ def get_synthesis(prompt, max_tokens=120):
                     "content": (
                         "You are Clarity, the analytical synthesis engine of Context Finder. "
                         "You reason inside a structured 31-domain semantic map (the Nominal Universe). "
-                        "Keep horizontal noun comparisons strictly separate from vertical verb operations. "
+                        "Keep horizontal noun structures strictly separate from vertical verb forces. "
                         "Use assigned domain coordinates to escape clichés and uncover non-obvious structural connections. "
                         "Write crisp, objective, insightful prose without fluff."
                     )
@@ -76,10 +76,13 @@ def _detect_triad_roles(profiles):
     return ["NOUN", "NOUN", "NOUN"]
 
 
-def _classify_vertical_operators(coord_brief, tier_3, verb_hint=None):
+def _classify_vertical_operators(coord_brief, tier_3, verb_hints=None):
     """Classifies the collision's dominant force-vectors into Primary and Secondary Vertical Verb Operators."""
     ops_list = ", ".join(VERTICAL_OPERATORS)
-    hint_line = f"Explicit Input Verb Operator: '{verb_hint}' (align primary operator closely with this force).\n" if verb_hint else ""
+    hint_line = (
+        f"Explicit Input Verb Operator(s): {', '.join(verb_hints)} (align operators closely with these forces).\n"
+        if verb_hints else ""
+    )
     prompt = (
         f"Coordinates:\n{coord_brief}\n\n"
         f"{hint_line}"
@@ -162,7 +165,7 @@ def _run_triangulation_funnel(profiles, roles):
     )
 
     primary_op, secondary_op = _classify_vertical_operators(coord_brief, tier_3)
-    return ab, bc, ac, abbc, bcac, tier_3, primary_op, secondary_op, coord_brief
+    return ab, bc, ac, abbc, bcac, tier_3, primary_op, secondary_op
 
 
 def _run_operator_funnel(profiles, roles):
@@ -170,27 +173,22 @@ def _run_operator_funnel(profiles, roles):
     noun_profiles = [p for p, r in zip(profiles, roles) if r == "NOUN"]
     verb_profiles = [p for p, r in zip(profiles, roles) if r == "VERB"]
 
-    # Fallback safety if 2+ verbs were entered: keep first verb as primary operator, treat others as conceptual anchors
+    n1, n2 = noun_profiles[0], noun_profiles[1]
     v = verb_profiles[0]
-    n1 = noun_profiles[0]
-    n2 = noun_profiles[1] if len(noun_profiles) >= 2 else verb_profiles[1]
     coord_brief = _format_coordinate_brief(profiles, roles)
 
-    # ab = Horizontal Addition (N1 + N2: shared structural ground)
     ab = get_synthesis(
         f"Semantic Map Coordinates:\n{coord_brief}\n\n"
         f"Horizontal Addition ({n1['noun']} + {n2['noun']}): In ONE concise sentence (under 22 words), identify what "
         f"'{n1['noun']}' ({', '.join(n1['domains'])}) and '{n2['noun']}' ({', '.join(n2['domains'])}) share structurally.",
         max_tokens=70
     )
-    # bc = Horizontal Subtraction (N1 - N2: structural gap/contrast)
     bc = get_synthesis(
         f"Semantic Map Coordinates:\n{coord_brief}\n\n"
         f"Horizontal Subtraction ({n1['noun']} - {n2['noun']}): In ONE concise sentence (under 22 words), identify the "
         f"core structural difference or tension separating '{n1['noun']}' and '{n2['noun']}'.",
         max_tokens=70
     )
-    # ac = Vertical Operator Application ((N1, N2) ×/÷ V: force acting on the pair)
     ac = get_synthesis(
         f"Semantic Map Coordinates:\n{coord_brief}\n\n"
         f"Vertical Operation (({n1['noun']}, {n2['noun']}) acted upon by '{v['noun']}'): In ONE concise sentence (under 22 words), "
@@ -198,7 +196,6 @@ def _run_operator_funnel(profiles, roles):
         max_tokens=70
     )
 
-    # Tier 2: Convergent synthesis combining horizontal baseline (ab/bc) with vertical transformation (ac)
     abbc = get_synthesis(
         f"Semantic Map Coordinates:\n{coord_brief}\n\n"
         f"Shared Ground (N1 + N2): {ab}\nVertical Force ({v['noun']}): {ac}\n\n"
@@ -212,7 +209,6 @@ def _run_operator_funnel(profiles, roles):
         max_tokens=80
     )
 
-    # Tier 3: Resulting (X, Y) Event
     tier_3 = get_synthesis(
         f"Semantic Map Coordinates:\n{coord_brief}\n\n"
         f"Transformation 1: {abbc}\nTransformation 2: {bcac}\n\n"
@@ -221,8 +217,110 @@ def _run_operator_funnel(profiles, roles):
         max_tokens=80
     )
 
-    primary_op, secondary_op = _classify_vertical_operators(coord_brief, tier_3, verb_hint=v["noun"])
-    return ab, bc, ac, abbc, bcac, tier_3, primary_op, secondary_op, coord_brief
+    primary_op, secondary_op = _classify_vertical_operators(coord_brief, tier_3, verb_hints=[v["noun"]])
+    return ab, bc, ac, abbc, bcac, tier_3, primary_op, secondary_op
+
+
+def _run_dual_operator_funnel(profiles, roles):
+    """1-Noun + 2-Verb Mode: Two vertical forces (V1, V2) acting simultaneously on a single horizontal anchor (N1)."""
+    n1 = [p for p, r in zip(profiles, roles) if r == "NOUN"][0]
+    verbs = [p for p, r in zip(profiles, roles) if r == "VERB"]
+    v1, v2 = verbs[0], verbs[1]
+    coord_brief = _format_coordinate_brief(profiles, roles)
+
+    ab = get_synthesis(
+        f"Semantic Map Coordinates:\n{coord_brief}\n\n"
+        f"Force 1 on Anchor ({n1['noun']} × {v1['noun']}): In ONE concise sentence (under 22 words), explain what happens "
+        f"when '{v1['noun']}' acts directly upon '{n1['noun']}' ({', '.join(n1['domains'])}).",
+        max_tokens=70
+    )
+    bc = get_synthesis(
+        f"Semantic Map Coordinates:\n{coord_brief}\n\n"
+        f"Force 2 on Anchor ({n1['noun']} × {v2['noun']}): In ONE concise sentence (under 22 words), explain what happens "
+        f"when '{v2['noun']}' acts directly upon '{n1['noun']}' ({', '.join(n1['domains'])}).",
+        max_tokens=70
+    )
+    ac = get_synthesis(
+        f"Semantic Map Coordinates:\n{coord_brief}\n\n"
+        f"Operator Collision ({v1['noun']} vs. {v2['noun']}): In ONE concise sentence (under 22 words), reveal whether "
+        f"'{v1['noun']}' and '{v2['noun']}' reinforce, sequence, or counteract each other as forces.",
+        max_tokens=70
+    )
+
+    abbc = get_synthesis(
+        f"Semantic Map Coordinates:\n{coord_brief}\n\n"
+        f"Action 1: {ab}\nAction 2: {bc}\n\n"
+        f"In ONE sharp sentence (under 24 words), synthesize the push-and-pull created when both forces act on '{n1['noun']}'.",
+        max_tokens=80
+    )
+    bcac = get_synthesis(
+        f"Semantic Map Coordinates:\n{coord_brief}\n\n"
+        f"Action 2: {bc}\nForce Dynamic: {ac}\n\n"
+        f"In ONE sharp sentence (under 24 words), show which force dominates '{n1['noun']}' over time and why.",
+        max_tokens=80
+    )
+
+    tier_3 = get_synthesis(
+        f"Semantic Map Coordinates:\n{coord_brief}\n\n"
+        f"Resulting Dynamic 1: {abbc}\nResulting Dynamic 2: {bcac}\n\n"
+        "Synthesize this into ONE single, vivid, memorable sentence (under 28 words) capturing the fate of "
+        f"'{n1['noun']}' caught between '{v1['noun']}' and '{v2['noun']}'.",
+        max_tokens=80
+    )
+
+    primary_op, secondary_op = _classify_vertical_operators(coord_brief, tier_3, verb_hints=[v1["noun"], v2["noun"]])
+    return ab, bc, ac, abbc, bcac, tier_3, primary_op, secondary_op
+
+
+def _run_pure_dynamics_funnel(profiles, roles):
+    """3-Verb Mode: Maps pure transformation mechanics across three vertical forces (V1, V2, V3)."""
+    v1, v2, v3 = profiles[0], profiles[1], profiles[2]
+    coord_brief = _format_coordinate_brief(profiles, roles)
+
+    ab = get_synthesis(
+        f"Semantic Map Coordinates:\n{coord_brief}\n\n"
+        f"Force Pairing 1 ({v1['noun']} × {v2['noun']}): In ONE concise sentence (under 22 words), explain how the action "
+        f"'{v1['noun']}' triggers, amplifies, or resists '{v2['noun']}'.",
+        max_tokens=70
+    )
+    bc = get_synthesis(
+        f"Semantic Map Coordinates:\n{coord_brief}\n\n"
+        f"Force Pairing 2 ({v2['noun']} × {v3['noun']}): In ONE concise sentence (under 22 words), explain how the action "
+        f"'{v2['noun']}' leads into, collides with, or resolves into '{v3['noun']}'.",
+        max_tokens=70
+    )
+    ac = get_synthesis(
+        f"Semantic Map Coordinates:\n{coord_brief}\n\n"
+        f"Arc from '{v1['noun']}' to '{v3['noun']}': In ONE concise sentence (under 22 words), reveal the structural shift "
+        f"between initiating with '{v1['noun']}' and arriving at '{v3['noun']}'.",
+        max_tokens=70
+    )
+
+    abbc = get_synthesis(
+        f"Semantic Map Coordinates:\n{coord_brief}\n\n"
+        f"First Transition: {ab}\nSecond Transition: {bc}\n\n"
+        "In ONE sharp sentence (under 24 words), identify the causal chain or feedback loop linking all three actions.",
+        max_tokens=80
+    )
+    bcac = get_synthesis(
+        f"Semantic Map Coordinates:\n{coord_brief}\n\n"
+        f"Second Transition: {bc}\nOverall Arc: {ac}\n\n"
+        "In ONE sharp sentence (under 24 words), identify the deeper law of change governing this three-step dynamic.",
+        max_tokens=80
+    )
+
+    tier_3 = get_synthesis(
+        f"Semantic Map Coordinates:\n{coord_brief}\n\n"
+        f"Causal Chain: {abbc}\nGoverning Law: {bcac}\n\n"
+        "Synthesize this into ONE single, vivid, memorable sentence (under 28 words) expressing the universal cycle "
+        f"defined by '{v1['noun']}', '{v2['noun']}', and '{v3['noun']}'.",
+        max_tokens=80
+    )
+
+    primary_op, secondary_op = _classify_vertical_operators(
+        coord_brief, tier_3, verb_hints=[v1["noun"], v2["noun"], v3["noun"]]
+    )
+    return ab, bc, ac, abbc, bcac, tier_3, primary_op, secondary_op
 
 
 def run_clarity_funnel(noun1, noun2=None, noun3=None):
@@ -240,12 +338,18 @@ def run_clarity_funnel(noun1, noun2=None, noun3=None):
     roles = _detect_triad_roles(profiles)
     verb_count = roles.count("VERB")
 
-    if verb_count >= 1:
-        funnel_mode = "operator"
-        ab, bc, ac, abbc, bcac, tier_3, primary_op, secondary_op, _ = _run_operator_funnel(profiles, roles)
-    else:
+    if verb_count == 0:
         funnel_mode = "triangulation"
-        ab, bc, ac, abbc, bcac, tier_3, primary_op, secondary_op, _ = _run_triangulation_funnel(profiles, roles)
+        ab, bc, ac, abbc, bcac, tier_3, primary_op, secondary_op = _run_triangulation_funnel(profiles, roles)
+    elif verb_count == 1:
+        funnel_mode = "operator"
+        ab, bc, ac, abbc, bcac, tier_3, primary_op, secondary_op = _run_operator_funnel(profiles, roles)
+    elif verb_count == 2:
+        funnel_mode = "dual_operator"
+        ab, bc, ac, abbc, bcac, tier_3, primary_op, secondary_op = _run_dual_operator_funnel(profiles, roles)
+    else:
+        funnel_mode = "pure_dynamics"
+        ab, bc, ac, abbc, bcac, tier_3, primary_op, secondary_op = _run_pure_dynamics_funnel(profiles, roles)
 
     # Log the (X, Y) coordinate and funnel_mode into interactions.db
     tier_1_log = f"[{funnel_mode.upper()}] AB: {ab} | BC: {bc} | AC: {ac}"
