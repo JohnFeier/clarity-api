@@ -10,6 +10,7 @@ import openai
 
 CSV_LOCAL_PATH = os.path.join(os.path.dirname(__file__), "Google_Sheet_for_Kumu.csv")
 TAXONOMY_CSV_URL = os.getenv("TAXONOMY_CSV_URL", "").strip()
+SHEETS_WEBHOOK_URL = os.getenv("SHEETS_WEBHOOK_URL", "").strip()
 DB_PATH = os.path.join(os.path.dirname(__file__), "interactions.db")
 
 VERTICAL_OPERATORS = [
@@ -26,6 +27,24 @@ VERTICAL_OPERATORS = [
 _NOUN_TO_GROUPS = defaultdict(set)
 _ALL_GROUPS = set()
 _LOADED = False
+
+
+def _post_to_sheets(payload):
+    """Mirrors a ledger row or candidate word to Google Sheets if SHEETS_WEBHOOK_URL is configured."""
+    if not SHEETS_WEBHOOK_URL:
+        return
+    try:
+        body = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(
+            SHEETS_WEBHOOK_URL,
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            resp.read()
+    except Exception as e:
+        print(f"[Taxonomy] Google Sheets sync warning: {e}")
 
 
 def _parse_csv_stream(stream):
@@ -149,6 +168,13 @@ def _classify_unknown_noun(noun):
         """, (noun.lower(), matched, now))
         conn.commit()
         conn.close()
+
+        _post_to_sheets({
+            "table": "candidates",
+            "noun": noun.lower(),
+            "assigned_domain": matched,
+            "first_seen": now
+        })
     except Exception as db_err:
         print(f"[Taxonomy] Candidate noun log skipped: {db_err}")
 
@@ -192,7 +218,7 @@ def log_interaction(
         init_db()
         conn = sqlite3.connect(DB_PATH)
         now = datetime.now(timezone.utc).isoformat()
-        conn.execute("""
+        cur = conn.execute("""
             INSERT INTO interactions (
                 created_at, funnel_mode, noun_1, noun_2, noun_3,
                 domains_1, domains_2, domains_3,
@@ -214,8 +240,27 @@ def log_interaction(
             tier_2,
             tier_3
         ))
+        row_id = cur.lastrowid
         conn.commit()
         conn.close()
+
+        _post_to_sheets({
+            "table": "interactions",
+            "id": row_id,
+            "created_at": now,
+            "funnel_mode": funnel_mode,
+            "word_1": noun_profiles[0]["noun"],
+            "word_2": noun_profiles[1]["noun"],
+            "word_3": noun_profiles[2]["noun"],
+            "domains_1": ", ".join(noun_profiles[0]["domains"]),
+            "domains_2": ", ".join(noun_profiles[1]["domains"]),
+            "domains_3": ", ".join(noun_profiles[2]["domains"]),
+            "primary_operator": primary_operator,
+            "secondary_operator": secondary_operator,
+            "tier_1": tier_1,
+            "tier_2": tier_2,
+            "tier_3": tier_3
+        })
     except Exception as e:
         print(f"[Taxonomy] Interaction log warning: {e}")
 
