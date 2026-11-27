@@ -218,3 +218,56 @@ def log_interaction(
         conn.close()
     except Exception as e:
         print(f"[Taxonomy] Interaction log warning: {e}")
+
+
+def export_ledger_csv(table="interactions"):
+    """Exports the SQLite interactions ledger or candidate_nouns table as a clean CSV string."""
+    init_db()
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    try:
+        if table == "candidates":
+            rows = conn.execute("""
+                SELECT noun, assigned_domain, times_seen, first_seen
+                FROM candidate_nouns
+                ORDER BY times_seen DESC, first_seen DESC
+            """).fetchall()
+            writer.writerow(["noun", "assigned_domain", "times_seen", "first_seen"])
+            for r in rows:
+                writer.writerow([r["noun"], r["assigned_domain"], r["times_seen"], r["first_seen"]])
+        else:
+            rows = conn.execute("""
+                SELECT
+                    id, created_at, funnel_mode,
+                    noun_1, noun_2, noun_3,
+                    domains_1, domains_2, domains_3,
+                    primary_operator, secondary_operator,
+                    tier_1, tier_2, tier_3
+                FROM interactions
+                ORDER BY id DESC
+            """).fetchall()
+            writer.writerow([
+                "id", "created_at", "funnel_mode",
+                "word_1", "word_2", "word_3",
+                "domains_1", "domains_2", "domains_3",
+                "primary_operator", "secondary_operator",
+                "tier_1", "tier_2", "tier_3"
+            ])
+            for r in rows:
+                d1 = ", ".join(json.loads(r["domains_1"])) if r["domains_1"] else ""
+                d2 = ", ".join(json.loads(r["domains_2"])) if r["domains_2"] else ""
+                d3 = ", ".join(json.loads(r["domains_3"])) if r["domains_3"] else ""
+                writer.writerow([
+                    r["id"], r["created_at"], r["funnel_mode"] or "triangulation",
+                    r["noun_1"], r["noun_2"], r["noun_3"],
+                    d1, d2, d3,
+                    r["primary_operator"] or "", r["secondary_operator"] or "",
+                    r["tier_1"] or "", r["tier_2"] or "", r["tier_3"] or ""
+                ])
+    finally:
+        conn.close()
+
+    return output.getvalue()
