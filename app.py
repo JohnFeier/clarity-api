@@ -1,13 +1,14 @@
 import openai
 import os
-from flask import Flask, request, jsonify, make_response, render_template
+from flask import Flask, request, jsonify, make_response, render_template, Response
 from flask_cors import CORS
 from dotenv import load_dotenv
 
 # 1. IMPORT YOUR ENGINES
-# Ensure these filenames match exactly: context_engine.py and radiant_clarity_engine.py
+# Ensure these filenames match exactly: context_engine.py, radiant_clarity_engine.py, and taxonomy_engine.py
 from context_engine import run_clarity_funnel
 from radiant_clarity_engine import run_radiance_engine, RADIANT_SIGNATURES
+from taxonomy_engine import export_ledger_csv
 
 # 2. INITIALIZE APP & LOAD API KEY
 app = Flask(__name__, static_folder='static', template_folder='templates')
@@ -55,7 +56,7 @@ def process():
         variables = data.get('variables', [])
         
         if not variables or len(variables) < 3:
-            return jsonify({"error": "Three nouns are required."}), 400
+            return jsonify({"error": "Three words are required."}), 400
 
         # --- STEP 1: Run the Logic Funnel (from context_engine.py) ---
         funnel_results = run_clarity_funnel(variables)
@@ -108,7 +109,34 @@ def generate_image():
         print(f"🔥 Image Error: {str(e)}", flush=True)
         return jsonify({"error": str(e)}), 500
 
-# 7. START THE SERVER
+# 7. LEDGER EXPORT ROUTES
+@app.route('/export-ledger', methods=['GET'])
+def export_ledger():
+    try:
+        csv_data = export_ledger_csv(table="interactions")
+        return Response(
+            csv_data,
+            mimetype="text/csv",
+            headers={"Content-Disposition": "attachment; filename=context_finder_ledger.csv"}
+        )
+    except Exception as e:
+        print(f"🔥 Ledger export error: {str(e)}", flush=True)
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/export-candidates', methods=['GET'])
+def export_candidates():
+    try:
+        csv_data = export_ledger_csv(table="candidates")
+        return Response(
+            csv_data,
+            mimetype="text/csv",
+            headers={"Content-Disposition": "attachment; filename=context_finder_candidates.csv"}
+        )
+    except Exception as e:
+        print(f"🔥 Candidate export error: {str(e)}", flush=True)
+        return jsonify({"error": str(e)}), 500
+
+# 8. START THE SERVER
 if __name__ == "__main__":
     # Use the port Render expects (10000) or default to 5000 for local testing
     port = int(os.environ.get("PORT", 5000))
