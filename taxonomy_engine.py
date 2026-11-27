@@ -69,13 +69,14 @@ def load_taxonomy(force_reload=False):
 
 
 def init_db():
-    """Creates/migrates the SQLite interaction ledger for horizontal nouns and vertical verb operators."""
+    """Creates/migrates the SQLite interaction ledger for horizontal domains, funnel mode, and vertical operators."""
     conn = sqlite3.connect(DB_PATH)
     try:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS interactions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 created_at TEXT NOT NULL,
+                funnel_mode TEXT DEFAULT 'triangulation',
                 noun_1 TEXT NOT NULL,
                 noun_2 TEXT NOT NULL,
                 noun_3 TEXT NOT NULL,
@@ -89,8 +90,9 @@ def init_db():
                 tier_3 TEXT
             )
         """)
-        # Safe migration if interactions table already exists without operator columns
         existing_cols = {row[1] for row in conn.execute("PRAGMA table_info(interactions)").fetchall()}
+        if "funnel_mode" not in existing_cols:
+            conn.execute("ALTER TABLE interactions ADD COLUMN funnel_mode TEXT DEFAULT 'triangulation'")
         if "primary_operator" not in existing_cols:
             conn.execute("ALTER TABLE interactions ADD COLUMN primary_operator TEXT")
         if "secondary_operator" not in existing_cols:
@@ -110,13 +112,13 @@ def init_db():
 
 
 def _classify_unknown_noun(noun):
-    """Assigns a brand-new user noun to the closest of the 31 Kumu domains and queues it as a candidate."""
+    """Assigns a brand-new user word to the closest of the 31 Kumu domains and queues it as a candidate."""
     if not _ALL_GROUPS:
         return ["General"]
 
     sorted_groups = sorted(_ALL_GROUPS)
     prompt = (
-        f"Classify the noun '{noun}' into the single best-fitting domain from this exact list:\n"
+        f"Classify the concept '{noun}' into the single best-fitting domain from this exact list:\n"
         f"{', '.join(sorted_groups)}\n\n"
         "Respond with ONLY the exact domain name from the list above."
     )
@@ -154,7 +156,7 @@ def _classify_unknown_noun(noun):
 
 
 def lookup_nouns(nouns):
-    """Returns structural metadata for each input noun from Google_Sheet_for_Kumu.csv."""
+    """Returns structural metadata for each input word from Google_Sheet_for_Kumu.csv."""
     load_taxonomy()
     results = []
     for raw in nouns:
@@ -176,21 +178,30 @@ def lookup_nouns(nouns):
     return results
 
 
-def log_interaction(noun_profiles, tier_1, tier_2, tier_3, primary_operator="FORGE", secondary_operator=""):
-    """Records the triad, horizontal domain coordinates, vertical verb operators, and synthesis."""
+def log_interaction(
+    noun_profiles,
+    tier_1,
+    tier_2,
+    tier_3,
+    primary_operator="FORGE",
+    secondary_operator="",
+    funnel_mode="triangulation"
+):
+    """Records the triad, funnel mode, horizontal domain coordinates, vertical verb operators, and synthesis."""
     try:
         init_db()
         conn = sqlite3.connect(DB_PATH)
         now = datetime.now(timezone.utc).isoformat()
         conn.execute("""
             INSERT INTO interactions (
-                created_at, noun_1, noun_2, noun_3,
+                created_at, funnel_mode, noun_1, noun_2, noun_3,
                 domains_1, domains_2, domains_3,
                 primary_operator, secondary_operator,
                 tier_1, tier_2, tier_3
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             now,
+            funnel_mode,
             noun_profiles[0]["noun"],
             noun_profiles[1]["noun"],
             noun_profiles[2]["noun"],
