@@ -12,6 +12,17 @@ CSV_LOCAL_PATH = os.path.join(os.path.dirname(__file__), "Google_Sheet_for_Kumu.
 TAXONOMY_CSV_URL = os.getenv("TAXONOMY_CSV_URL", "").strip()
 DB_PATH = os.path.join(os.path.dirname(__file__), "interactions.db")
 
+VERTICAL_OPERATORS = [
+    "FORGE",       # Creation, synthesis, birth of new structure
+    "ERODE",       # Decay, dissolution, hollowing out
+    "BIND",        # Integration, alignment, trust, stabilization
+    "COLLIDE",     # Friction, disruption, acute clash
+    "TRANSMIT",    # Diffusion, exchange, amplification across boundaries
+    "CONTAIN",     # Constraint, governance, regulation, resistance
+    "METABOLIZE",  # Adaptation, reshaping, absorbing shock into evolution
+    "ENDURE"       # Continuity, cyclical recurrence, deep inertia
+]
+
 _NOUN_TO_GROUPS = defaultdict(set)
 _ALL_GROUPS = set()
 _LOADED = False
@@ -58,7 +69,7 @@ def load_taxonomy(force_reload=False):
 
 
 def init_db():
-    """Creates the SQLite interaction ledger for tracking three-noun and domain collisions."""
+    """Creates/migrates the SQLite interaction ledger for horizontal nouns and vertical verb operators."""
     conn = sqlite3.connect(DB_PATH)
     try:
         conn.execute("""
@@ -71,11 +82,20 @@ def init_db():
                 domains_1 TEXT NOT NULL,
                 domains_2 TEXT NOT NULL,
                 domains_3 TEXT NOT NULL,
+                primary_operator TEXT,
+                secondary_operator TEXT,
                 tier_1 TEXT,
                 tier_2 TEXT,
                 tier_3 TEXT
             )
         """)
+        # Safe migration if interactions table already exists without operator columns
+        existing_cols = {row[1] for row in conn.execute("PRAGMA table_info(interactions)").fetchall()}
+        if "primary_operator" not in existing_cols:
+            conn.execute("ALTER TABLE interactions ADD COLUMN primary_operator TEXT")
+        if "secondary_operator" not in existing_cols:
+            conn.execute("ALTER TABLE interactions ADD COLUMN secondary_operator TEXT")
+
         conn.execute("""
             CREATE TABLE IF NOT EXISTS candidate_nouns (
                 noun TEXT PRIMARY KEY,
@@ -116,7 +136,6 @@ def _classify_unknown_noun(noun):
         print(f"[Taxonomy] Dynamic classification fallback for '{noun}': {e}")
         matched = "General"
 
-    # Record the new noun in SQLite so you can review and add popular user nouns to your Google Sheet
     try:
         init_db()
         conn = sqlite3.connect(DB_PATH)
@@ -135,12 +154,7 @@ def _classify_unknown_noun(noun):
 
 
 def lookup_nouns(nouns):
-    """
-    Returns structural metadata for each input noun:
-    - exact domains from Google_Sheet_for_Kumu.csv
-    - whether it is a multi-domain 'bridge' noun
-    - dynamic domain classification if not yet in the sheet
-    """
+    """Returns structural metadata for each input noun from Google_Sheet_for_Kumu.csv."""
     load_taxonomy()
     results = []
     for raw in nouns:
@@ -162,8 +176,8 @@ def lookup_nouns(nouns):
     return results
 
 
-def log_interaction(noun_profiles, tier_1, tier_2, tier_3):
-    """Records the triad, its Kumu domain coordinates, and the Tier 3 synthesis into interactions.db."""
+def log_interaction(noun_profiles, tier_1, tier_2, tier_3, primary_operator="FORGE", secondary_operator=""):
+    """Records the triad, horizontal domain coordinates, vertical verb operators, and synthesis."""
     try:
         init_db()
         conn = sqlite3.connect(DB_PATH)
@@ -172,8 +186,9 @@ def log_interaction(noun_profiles, tier_1, tier_2, tier_3):
             INSERT INTO interactions (
                 created_at, noun_1, noun_2, noun_3,
                 domains_1, domains_2, domains_3,
+                primary_operator, secondary_operator,
                 tier_1, tier_2, tier_3
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             now,
             noun_profiles[0]["noun"],
@@ -182,6 +197,8 @@ def log_interaction(noun_profiles, tier_1, tier_2, tier_3):
             json.dumps(noun_profiles[0]["domains"]),
             json.dumps(noun_profiles[1]["domains"]),
             json.dumps(noun_profiles[2]["domains"]),
+            primary_operator,
+            secondary_operator,
             tier_1,
             tier_2,
             tier_3
