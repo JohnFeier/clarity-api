@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 # 1. IMPORT YOUR ENGINES
 # Ensure these filenames match exactly: context_engine.py, radiant_clarity_engine.py, and taxonomy_engine.py
 from context_engine import run_clarity_funnel
-from radiant_clarity_engine import run_radiance_engine, RADIANT_SIGNATURES
+from radiant_clarity_engine import run_radiance_engine, get_signature_for_operator
 from taxonomy_engine import export_ledger_csv
 
 # 2. INITIALIZE APP & LOAD API KEY
@@ -16,7 +16,6 @@ load_dotenv()
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 # 3. SECURITY (CORS)
-# This prevents the "Blocked by CORS policy" errors you saw earlier
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 @app.after_request
@@ -62,23 +61,30 @@ def process():
         funnel_results = run_clarity_funnel(variables)
 
         # --- STEP 2: Format strings for the Frontend ---
-        # We combine the intersections so they fit into the 3-Tier display
         t1_combined = f"Intersections: {funnel_results['tier_1']['ab']} | {funnel_results['tier_1']['bc']} | {funnel_results['tier_1']['ac']}"
         t2_combined = f"Syntheses: {funnel_results['tier_2']['abbc']} and {funnel_results['tier_2']['bcac']}"
         proto_idea = funnel_results.get("tier_3", "Synthesis incomplete.")
 
-        # --- STEP 3: Run the Radiance Engine (from radiant_clarity_engine.py) ---
+        # --- STEP 3: Run the Radiance Engine using the Operator-Matched Lens ---
         noun1, noun2, noun3 = [v.strip() for v in variables[:3]]
-        selected_signature = RADIANT_SIGNATURES[0] # Defaulting to 'Mirror of Becoming'
-        radiance_output = run_radiance_engine(noun1, noun2, noun3, selected_signature)
+        operators = funnel_results.get("operators", {})
+        primary_op = operators.get("primary", "FORGE")
+        secondary_op = operators.get("secondary", "")
+        selected_signature = get_signature_for_operator(primary_op)
+
+        radiance_output = run_radiance_engine(
+            noun1, noun2, noun3, selected_signature, secondary_operator=secondary_op
+        )
 
         # --- STEP 4: SEND TO FRONTEND ---
-        # These keys match the localStorage.getItem calls in your HTML
         return jsonify({
             "summary_1": t1_combined,
             "summary_2": t2_combined,
             "summary_3": proto_idea,
-            "radiance": radiance_output
+            "radiance": radiance_output,
+            "radiance_lens": selected_signature["name"],
+            "funnel_mode": funnel_results.get("funnel_mode", "triangulation"),
+            "operators": operators
         }), 200
 
     except Exception as e:
@@ -86,7 +92,6 @@ def process():
         return jsonify({"error": str(e)}), 500
 
 # 6. IMAGE GENERATION ROUTE
-# This handles the "Visualize Insight" button click
 @app.route('/generate-image', methods=['POST'])
 def generate_image():
     try:
@@ -138,6 +143,5 @@ def export_candidates():
 
 # 8. START THE SERVER
 if __name__ == "__main__":
-    # Use the port Render expects (10000) or default to 5000 for local testing
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
