@@ -122,6 +122,11 @@
       }
 
       document.addEventListener("DOMContentLoaded", () => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("w1")) document.getElementById("noun1").value = params.get("w1");
+        if (params.get("w2")) document.getElementById("noun2").value = params.get("w2");
+        if (params.get("w3")) document.getElementById("noun3").value = params.get("w3");
+
         const activationBtn = document.getElementById("activation-button");
         const loading = document.getElementById("loadingMessage");
 
@@ -150,12 +155,14 @@
 
             const data = await response.json();
 
-            // Safety check: ensure we actually got the data before redirecting
             if (!data || !data.summary_3) {
               throw new Error(data.error || "Empty synthesis returned from server.");
             }
 
             const payload = {
+              w1: noun1,
+              w2: noun2,
+              w3: noun3,
               summary_1: data.summary_1 || "",
               summary_2: data.summary_2 || "",
               summary_3: data.summary_3 || "",
@@ -164,16 +171,16 @@
               primary_operator: (data.operators && data.operators.primary) || "FORGE"
             };
 
-            // Clear old data and set new data in both storage types
             localStorage.clear();
             sessionStorage.clear();
-            
+
             Object.entries(payload).forEach(([k, v]) => {
               localStorage.setItem(k, v);
               sessionStorage.setItem(k, v);
             });
 
-            window.location.href = "/results";
+            const shareQuery = new URLSearchParams({ w1: noun1, w2: noun2, w3: noun3 }).toString();
+            window.location.href = `/results?${shareQuery}`;
           } catch (error) {
             console.error("Fetch error:", error);
             alert(`Error: ${error.message}. Please try again.`);
