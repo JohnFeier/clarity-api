@@ -7,7 +7,11 @@ from dotenv import load_dotenv
 # 1. IMPORT YOUR ENGINES
 # Ensure these filenames match exactly: context_engine.py, radiant_clarity_engine.py, and taxonomy_engine.py
 from context_engine import run_clarity_funnel
-from radiant_clarity_engine import run_radiance_engine, get_signature_for_operator
+from radiant_clarity_engine import (
+    run_radiance_engine,
+    get_signature_for_operator,
+    build_radiance_image_prompt,
+)
 from taxonomy_engine import export_ledger_csv
 
 # 2. INITIALIZE APP & LOAD API KEY
