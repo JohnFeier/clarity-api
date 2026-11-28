@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <title>Context Finder — Synthesis Results</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Montserrat:wght@600;700&family=Pacifico&display=swap" rel="stylesheet" />
+  <link href="[https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Montserrat:wght@600;700&family=Pacifico&display=swap](https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Montserrat:wght@600;700&family=Pacifico&display=swap)" rel="stylesheet" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-SHNFKJPC74"></script>
+  <script async src="[https://www.googletagmanager.com/gtag/js?id=G-SHNFKJPC74](https://www.googletagmanager.com/gtag/js?id=G-SHNFKJPC74)"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-SHNFKJPC74');</script>
   <style>
     .stage-heading{display:block;font-size:.85rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#005f5f;margin:0 0 12px;padding-bottom:8px;border-bottom:1px solid rgba(0,128,128,.2)}
@@ -24,8 +24,10 @@
     .primary-accent-button{background:#005f5f;color:#ffdead;border:1.5px solid #005f5f;padding:.55rem 1rem;font-size:.9rem;font-weight:600;border-radius:6px;cursor:pointer}
     .primary-accent-button:hover{background:#004949}
     .bluesky-box{display:none;margin-top:16px;padding:14px;border-radius:8px;background:rgba(0,128,128,.06);border:1px solid rgba(0,128,128,.25)}
-    .bluesky-textarea{width:100%;box-sizing:border-box;min-height:82px;padding:10px;border-radius:6px;border:1px solid rgba(0,95,95,.35);font-family:inherit;font-size:.95rem;line-height:1.45;color:#163030;background:#fff;resize:vertical}
-    .bluesky-meta{display:flex;justify-content:space-between;align-items:center;margin-top:10px;flex-wrap:wrap;gap:8px;font-size:.85rem;color:#005f5f}
+    .thread-post-card{margin-bottom:14px;padding-bottom:12px;border-bottom:1px dashed rgba(0,128,128,.25)}
+    .thread-post-card:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+    .bluesky-textarea{width:100%;box-sizing:border-box;min-height:78px;padding:10px;border-radius:6px;border:1px solid rgba(0,95,95,.35);font-family:inherit;font-size:.95rem;line-height:1.45;color:#163030;background:#fff;resize:vertical}
+    .bluesky-meta{display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:8px;font-size:.85rem;color:#005f5f}
     .char-count-ok{font-weight:600;color:#005f5f}
     .char-count-over{font-weight:700;color:#b00020}
     .radiance-subtext{font-size:.92rem;color:#2c4a4a;margin:0 0 12px}
@@ -62,18 +64,26 @@
     <div class="action-row">
       <button type="button" id="copy-btn" class="secondary-button">Copy All Tiers</button>
       <button type="button" id="bsky-draft-btn" class="secondary-button">Draft Bluesky Reply (&lt;300 chars)</button>
+      <button type="button" id="bsky-thread-btn" class="secondary-button">Draft Bluesky Thread (3 Posts)</button>
     </div>
+
     <div id="bluesky-box" class="bluesky-box">
       <textarea id="bluesky-textarea" class="bluesky-textarea" maxlength="320" placeholder="Generating link-free Bluesky reply..."></textarea>
       <div class="bluesky-meta">
         <span id="bsky-char-count" class="char-count-ok">0 / 300 chars</span>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button type="button" id="bsky-copy-btn" class="secondary-button">Copy Reply</button>
-          <a id="bsky-intent-link" href="https://bsky.app/intent/compose" target="_blank" rel="noopener" class="secondary-button">Open in Bluesky</a>
+          <a id="bsky-intent-link" href="[https://bsky.app/intent/compose](https://bsky.app/intent/compose)" target="_blank" rel="noopener" class="secondary-button">Open in Bluesky</a>
         </div>
       </div>
     </div>
+
+    <div id="thread-box" class="bluesky-box">
+      <div id="thread-status" style="font-size:.88rem;color:#005f5f;font-style:italic;margin-bottom:8px;"></div>
+      <div id="thread-list"></div>
+    </div>
   </div>
+
   <div class="results-card" style="text-align:center;">
     <h2 class="stage-heading" style="text-align:left;">
       Radiance • Poetic &amp; Visual Interpretation
@@ -118,16 +128,16 @@
       const storedW1 = (localStorage.getItem('w1') || '').trim();
       const storedW2 = (localStorage.getItem('w2') || '').trim();
       const storedW3 = (localStorage.getItem('w3') || '').trim();
-      const hasCachedSynthesis = Boolean(localStorage.getItem('summary_3') && localStorage.getItem('summary_3') !== 'No result found.');
+      const hasCached = Boolean(localStorage.getItem('summary_3') && localStorage.getItem('summary_3') !== 'No result found.');
 
-      const needsRemoteFetch = hasUrlTriad && (
-        !hasCachedSynthesis ||
+      const needsFetch = hasUrlTriad && (
+        !hasCached ||
         urlW1.toLowerCase() !== storedW1.toLowerCase() ||
         urlW2.toLowerCase() !== storedW2.toLowerCase() ||
         urlW3.toLowerCase() !== storedW3.toLowerCase()
       );
 
-      if (needsRemoteFetch) {
+      if (needsFetch) {
         const banner = document.getElementById('sync-banner');
         banner.style.display = 'block';
         try {
@@ -149,8 +159,8 @@
           };
           Object.entries(fresh).forEach(([k, v]) => localStorage.setItem(k, v));
           banner.style.display = 'none';
-        } catch (err) {
-          banner.textContent = 'Unable to load shared triad. Please try again or start a new synthesis.';
+        } catch {
+          banner.textContent = 'Unable to load shared triad. Please try again.';
         }
       }
 
@@ -160,12 +170,9 @@
 
       if (w1 && w2 && w3) {
         const q = new URLSearchParams({ w1, w2, w3 }).toString();
-        if (!hasUrlTriad) {
-          window.history.replaceState(null, '', `/results?${q}`);
-        }
+        if (!hasUrlTriad) window.history.replaceState(null, '', `/results?${q}`);
         document.getElementById('triad-card').style.display = 'flex';
-        document.getElementById('triad-pills').innerHTML = [w1, w2, w3]
-          .map(w => `<span class="triad-pill">${w.replace(/</g, '&lt;')}</span>`).join('');
+        document.getElementById('triad-pills').innerHTML = [w1, w2, w3].map(w => `<span class="triad-pill">${w.replace(/</g, '&lt;')}</span>`).join('');
         document.getElementById('tweak-nouns-link').href = `/home?${q}`;
         document.getElementById('share-url-btn').addEventListener('click', async function() {
           await navigator.clipboard.writeText(window.location.href);
@@ -228,13 +235,11 @@
 
       const radBtn = document.getElementById('radiance-btn');
       const bskyDraftBtn = document.getElementById('bsky-draft-btn');
-      if (tier3 === "No result found.") {
-        radBtn.disabled = true;
-        bskyDraftBtn.disabled = true;
-      } else {
-        radBtn.disabled = false;
-        bskyDraftBtn.disabled = false;
-      }
+      const threadBtn = document.getElementById('bsky-thread-btn');
+      const disabled = tier3 === "No result found.";
+      radBtn.disabled = disabled;
+      bskyDraftBtn.disabled = disabled;
+      threadBtn.disabled = disabled;
 
       document.getElementById('copy-btn').addEventListener('click', async function() {
         const txt = `TIER 1:\n${tier1}\n\nTIER 2:\n${tier2}\n\nTIER 3:\n${tier3}`;
@@ -247,16 +252,19 @@
       const bskyArea = document.getElementById('bluesky-textarea');
       const bskyCount = document.getElementById('bsky-char-count');
       const bskyLink = document.getElementById('bsky-intent-link');
+      const threadBox = document.getElementById('thread-box');
+
       const updateBsky = () => {
         const t = bskyArea.value;
         bskyCount.textContent = `${t.length} / 300 chars`;
         bskyCount.className = t.length <= 300 ? 'char-count-ok' : 'char-count-over';
-        bskyLink.href = `https://bsky.app/intent/compose?text=${encodeURIComponent(t)}`;
+        bskyLink.href = `[https://bsky.app/intent/compose?text=$](https://bsky.app/intent/compose?text=$){encodeURIComponent(t)}`;
       };
       bskyArea.addEventListener('input', updateBsky);
 
       bskyDraftBtn.addEventListener('click', async () => {
         bskyDraftBtn.disabled = true;
+        threadBox.style.display = 'none';
         bskyBox.style.display = 'block';
         bskyArea.value = "Distilling reply...";
         updateBsky();
@@ -279,6 +287,72 @@
         await navigator.clipboard.writeText(bskyArea.value);
         this.textContent = "Copied!";
         setTimeout(() => this.textContent = "Copy Reply", 2000);
+      });
+
+      threadBtn.addEventListener('click', async () => {
+        threadBtn.disabled = true;
+        threadBtn.textContent = 'Building Thread...';
+        bskyBox.style.display = 'none';
+        threadBox.style.display = 'block';
+        const statusEl = document.getElementById('thread-status');
+        const listEl = document.getElementById('thread-list');
+        statusEl.textContent = 'Weaving Tier 1 → Tier 2 → Tier 3 into a 3-post Bluesky arc...';
+        listEl.innerHTML = '';
+
+        try {
+          const r = await fetch('/bluesky-thread', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tier_1: tier1, tier_2: tier2, tier_3: tier3 })
+          });
+          if (!r.ok) throw new Error('Thread failed');
+          const d = await r.json();
+          const posts = d.posts || [];
+          statusEl.textContent = '';
+
+          posts.forEach((postText, idx) => {
+            const num = idx + 1;
+            const card = document.createElement('div');
+            card.className = 'thread-post-card';
+            const openBtn = num === 1
+              ? `<a id="thread-intent-1" href="[https://bsky.app/intent/compose?text=$](https://bsky.app/intent/compose?text=$){encodeURIComponent(postText)}" target="_blank" rel="noopener" class="secondary-button">Start Thread in Bluesky</a>`
+              : '';
+            card.innerHTML = `
+              <textarea class="bluesky-textarea" data-idx="${num}" maxlength="320"></textarea>
+              <div class="bluesky-meta">
+                <span class="char-count-ok" id="th-cnt-${num}">${postText.length} / 300 chars</span>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  <button type="button" class="secondary-button" id="th-cp-${num}">Copy Post ${num}/3</button>
+                  ${openBtn}
+                </div>
+              </div>`;
+            listEl.appendChild(card);
+
+            const ta = card.querySelector('textarea');
+            ta.value = postText;
+            const cnt = card.querySelector(`#th-cnt-${num}`);
+            ta.addEventListener('input', () => {
+              const l = ta.value.length;
+              cnt.textContent = `${l} / 300 chars`;
+              cnt.className = l <= 300 ? 'char-count-ok' : 'char-count-over';
+              if (num === 1) {
+                const link1 = document.getElementById('thread-intent-1');
+                if (link1) link1.href = `[https://bsky.app/intent/compose?text=$](https://bsky.app/intent/compose?text=$){encodeURIComponent(ta.value)}`;
+              }
+            });
+            card.querySelector(`#th-cp-${num}`).addEventListener('click', async function() {
+              await navigator.clipboard.writeText(ta.value);
+              this.textContent = `Copied ${num}/3!`;
+              setTimeout(() => this.textContent = `Copy Post ${num}/3`, 2000);
+            });
+          });
+          threadBtn.textContent = 'Regenerate Thread (3 Posts)';
+        } catch {
+          statusEl.textContent = 'Unable to build 3-post thread right now. Please try again.';
+          threadBtn.textContent = 'Draft Bluesky Thread (3 Posts)';
+        } finally {
+          threadBtn.disabled = false;
+        }
       });
 
       async function buildSocialCard(src, text, op, lens) {
