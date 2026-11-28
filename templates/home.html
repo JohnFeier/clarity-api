@@ -7,11 +7,11 @@
     <title>Enter Your Nouns - Context Finder</title>
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="[https://fonts.googleapis.com](https://fonts.googleapis.com)">
+    <link rel="preconnect" href="[https://fonts.gstatic.com](https://fonts.gstatic.com)" crossorigin>
+    <link href="[https://fonts.googleapis.com/css2?family=Pacifico&display=swap](https://fonts.googleapis.com/css2?family=Pacifico&display=swap)" rel="stylesheet" />
 
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-SHNFKJPC74"></script>
+    <script async src="[https://www.googletagmanager.com/gtag/js?id=G-SHNFKJPC74](https://www.googletagmanager.com/gtag/js?id=G-SHNFKJPC74)"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -86,6 +86,20 @@
         font-weight: bold;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       }
+      .ledger-nav-link {
+        display: inline-block;
+        margin-top: 1.25rem;
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: #005f5f;
+        text-decoration: none;
+        border-bottom: 1px dashed #008080;
+        padding-bottom: 2px;
+      }
+      .ledger-nav-link:hover {
+        color: #003d3d;
+        border-bottom-style: solid;
+      }
     </style>
 </head>
 <body class="inner-page-body">
@@ -125,6 +139,9 @@
             <button class="back-button" onclick="useSuggestedNouns()" type="button" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
                 Try These
             </button>
+            <div>
+                <a href="/ledger" class="ledger-nav-link">Explore Master Ledger →</a>
+            </div>
         </section>
     </main>
 
