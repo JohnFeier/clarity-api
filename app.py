@@ -15,7 +15,7 @@ from radiant_clarity_engine import (
     get_signature_for_operator,
     build_radiance_image_prompt,
 )
-from taxonomy_engine import export_ledger_csv
+from taxonomy_engine import export_ledger_csv, get_ledger_data
 
 # 2. INITIALIZE APP & LOAD API KEY
 app = Flask(__name__, static_folder='static', template_folder='templates')
@@ -46,6 +46,10 @@ def home():
 @app.route("/results")
 def results():
     return render_template("results.html")
+
+@app.route("/ledger")
+def ledger():
+    return render_template("ledger.html")
 
 # 5. THE MAIN PROCESS ROUTE
 @app.route('/process', methods=['POST', 'OPTIONS'])
@@ -248,7 +252,16 @@ def bluesky_thread():
         print(f"🔥 Bluesky thread error: {str(e)}", flush=True)
         return jsonify({"error": str(e)}), 500
 
-# 7. LEDGER EXPORT ROUTES
+# 7. LEDGER API & EXPORT ROUTES
+@app.route('/api/ledger', methods=['GET'])
+def api_ledger():
+    try:
+        data = get_ledger_data(limit=250)
+        return jsonify(data), 200
+    except Exception as e:
+        print(f"🔥 Ledger API error: {str(e)}", flush=True)
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/export-ledger', methods=['GET'])
 def export_ledger():
     try:
