@@ -1,190 +1,190 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Enter your nouns to find clarity through our specialized processing engine.">
-  <title>Enter Your Nouns - Clarity</title>
-  
-  <link rel="icon" href="data:,"> 
-  
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Enter your nouns to find clarity through our specialized processing engine.">
+    <title>Enter Your Nouns - Clarity</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet" />
 
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-SHNFKJPC74"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-SHNFKJPC74');
-  </script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-SHNFKJPC74"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-SHNFKJPC74');
+    </script>
 
-  <style>
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      border: 0;
-    }
-    #suggested-nouns {
-      min-height: 200px; 
-      margin-top: 2rem;
-      border-top: 1px solid rgba(0,0,0,0.1);
-      padding-top: 1rem;
-    }
-    #suggested-noun-list {
-      list-style: none;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      margin: 1rem 0;
-    }
-    #suggested-noun-list li {
-      background: #fff;
-      padding: 5px 15px;
-      border-radius: 20px;
-      font-weight: bold;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-  </style>
+    <style>
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        border: 0;
+      }
+      #suggested-nouns {
+        min-height: 200px;
+        margin-top: 2rem;
+        border-top: 1px solid rgba(0,0,0,0.1);
+        padding-top: 1rem;
+      }
+      #suggested-noun-list {
+        list-style: none;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin: 1rem 0;
+      }
+      #suggested-noun-list li {
+        background: #fff;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: bold;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+    </style>
 </head>
 <body class="inner-page-body">
-  <main class="variable-entry-card">
-    <header style="text-align: center;">
-      <h1 class="tier-title">Enter your nouns</h1>
-    </header>
+    <main class="variable-entry-card">
+        <header style="text-align: center;">
+            <h1 class="tier-title">Enter your nouns</h1>
+        </header>
 
-    <div class="input-field">
-      <label for="noun1" class="sr-only">First Noun</label>
-      <input type="text" id="noun1" placeholder="First noun" />
-    </div>
-    <div class="input-field">
-      <label for="noun2" class="sr-only">Second Noun</label>
-      <input type="text" id="noun2" placeholder="Second noun" />
-    </div>
-    <div class="input-field">
-      <label for="noun3" class="sr-only">Third Noun</label>
-      <input type="text" id="noun3" placeholder="Third noun" />
-    </div>
+        <div class="input-field">
+            <label for="noun1" class="sr-only">First Noun</label>
+            <input type="text" id="noun1" placeholder="First noun" />
+        </div>
+        <div class="input-field">
+            <label for="noun2" class="sr-only">Second Noun</label>
+            <input type="text" id="noun2" placeholder="Second noun" />
+        </div>
+        <div class="input-field">
+            <label for="noun3" class="sr-only">Third Noun</label>
+            <input type="text" id="noun3" placeholder="Third noun" />
+        </div>
 
-    <button id="activation-button" type="button">Find Clarity</button>
-    
-    <p id="loadingMessage" aria-live="polite" style="display: none; margin-top: 1rem; font-style: italic; text-align: center;">
-      Finding your Clarity...
-    </p>
+        <button id="activation-button" type="button">Find Clarity</button>
 
-    <section id="suggested-nouns" style="text-align: center;">
-      <h2>Suggested Nouns of the Day</h2>
-      <p id="suggested-title"><em>Loading daily suggestions...</em></p>
-      <ul id="suggested-noun-list"></ul>
-      <button class="back-button" onclick="useSuggestedNouns()" type="button" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
-        Try These
-      </button>
-    </section>
-  </main>
+        <p id="loadingMessage" aria-live="polite" style="display: none; margin-top: 1rem; font-style: italic; text-align: center;">
+            Finding your Clarity...
+        </p>
 
-  <script>
-    const suggestedSets = [
-      { title: "Mind & Meaning", nouns: ["Memory", "Silence", "Horizon"] },
-      { title: "Systems & Change", nouns: ["Order", "Entropy", "Pattern"] },
-      { title: "Human Experience", nouns: ["Solitude", "Belonging", "Purpose"] },
-      { title: "Time & Cycles", nouns: ["Momentum", "Stillness", "Renewal"] },
-      { title: "Creation & Form", nouns: ["Structure", "Intuition", "Synthesis"] },
-      { title: "Society & Perspective", nouns: ["Tradition", "Disruption", "Consensus"] },
-      { title: "Nature & Perception", nouns: ["Shadow", "Clarity", "Resonance"] }
-    ];
+        <section id="suggested-nouns" style="text-align: center;">
+            <h2>Suggested Nouns of the Day</h2>
+            <p id="suggested-title"><em>Loading daily suggestions...</em></p>
+            <ul id="suggested-noun-list"></ul>
+            <button class="back-button" onclick="useSuggestedNouns()" type="button" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                Try These
+            </button>
+        </section>
+    </main>
 
-    let currentSuggestedSet = null;
+    <script>
+      const suggestedSets = [
+        { title: "Mind & Meaning", nouns: ["Memory", "Silence", "Horizon"] },
+        { title: "Systems & Change", nouns: ["Order", "Entropy", "Pattern"] },
+        { title: "Human Experience", nouns: ["Solitude", "Belonging", "Purpose"] },
+        { title: "Time & Cycles", nouns: ["Momentum", "Stillness", "Renewal"] },
+        { title: "Creation & Form", nouns: ["Structure", "Intuition", "Synthesis"] },
+        { title: "Society & Perspective", nouns: ["Tradition", "Disruption", "Consensus"] },
+        { title: "Nature & Perception", nouns: ["Shadow", "Clarity", "Resonance"] }
+      ];
 
-    function displaySuggestedSet() {
-      const dayIndex = new Date().getDate() % suggestedSets.length;
-      currentSuggestedSet = suggestedSets[dayIndex];
+      let currentSuggestedSet = null;
 
-      const titleEl = document.getElementById("suggested-title");
-      const listEl = document.getElementById("suggested-noun-list");
-
-      if (titleEl && listEl && currentSuggestedSet) {
-        titleEl.textContent = currentSuggestedSet.title;
-        listEl.innerHTML = currentSuggestedSet.nouns
-          .map(noun => `<li>${noun}</li>`)
-          .join("");
-      }
-    }
-
-    function useSuggestedNouns() {
-      if (!currentSuggestedSet) return;
-      document.getElementById("noun1").value = currentSuggestedSet.nouns[0] || "";
-      document.getElementById("noun2").value = currentSuggestedSet.nouns[1] || "";
-      document.getElementById("noun3").value = currentSuggestedSet.nouns[2] || "";
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      const activationBtn = document.getElementById("activation-button");
-      const loading = document.getElementById("loadingMessage");
-
-      activationBtn.addEventListener("click", async () => {
-        const noun1 = document.getElementById('noun1').value.trim();
-        const noun2 = document.getElementById('noun2').value.trim();
-        const noun3 = document.getElementById('noun3').value.trim();
-
-        const variables = [noun1, noun2, noun3].filter(Boolean);
-        if (variables.length < 3) {
-          alert('Clarity requires three nouns to run the logic funnel.');
-          return;
+      function displaySuggestedSet() {
+        const dayIndex = new Date().getDate() % suggestedSets.length;
+        currentSuggestedSet = suggestedSets[dayIndex];
+        const titleEl = document.getElementById("suggested-title");
+        const listEl = document.getElementById("suggested-noun-list");
+        if (titleEl && listEl && currentSuggestedSet) {
+          titleEl.textContent = currentSuggestedSet.title;
+          listEl.innerHTML = currentSuggestedSet.nouns
+            .map(noun => `<li>${noun}</li>`)
+            .join("");
         }
+      }
 
-        activationBtn.disabled = true;
-        loading.style.display = "block";
+      function useSuggestedNouns() {
+        if (!currentSuggestedSet) return;
+        document.getElementById("noun1").value = currentSuggestedSet.nouns[0] || "";
+        document.getElementById("noun2").value = currentSuggestedSet.nouns[1] || "";
+        document.getElementById("noun3").value = currentSuggestedSet.nouns[2] || "";
+      }
 
-        try {
-          const response = await fetch('/process', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ variables })
-          });
+      document.addEventListener("DOMContentLoaded", () => {
+        const activationBtn = document.getElementById("activation-button");
+        const loading = document.getElementById("loadingMessage");
 
-          if (!response.ok) throw new Error('Server response was not ok');
+        activationBtn.addEventListener("click", async () => {
+          const noun1 = document.getElementById('noun1').value.trim();
+          const noun2 = document.getElementById('noun2').value.trim();
+          const noun3 = document.getElementById('noun3').value.trim();
 
-          const data = await response.json();
-
-          if (!data || !data.summary_3) {
-            throw new Error(data.error || "Empty synthesis returned from server.");
+          const variables = [noun1, noun2, noun3].filter(Boolean);
+          if (variables.length < 3) {
+            alert('Clarity requires three nouns to run the logic funnel.');
+            return;
           }
 
-          const payload = {
-            summary_1: data.summary_1 || "",
-            summary_2: data.summary_2 || "",
-            summary_3: data.summary_3 || "",
-            radiance: data.radiance || "",
-            radiance_lens: data.radiance_lens || "Mirror of Becoming",
-            primary_operator: (data.operators && data.operators.primary) || "FORGE"
-          };
+          activationBtn.disabled = true;
+          loading.style.display = "block";
 
-          localStorage.clear();
-          Object.entries(payload).forEach(([k, v]) => {
-            localStorage.setItem(k, v);
-            sessionStorage.setItem(k, v);
-          });
+          try {
+            const response = await fetch('/process', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ variables })
+            });
 
-          window.location.href = "/results";
-        } catch (error) {
-          console.error("Fetch error:", error);
-          alert('Network error. Please try again.');
-        } finally {
-          activationBtn.disabled = false;
-          loading.style.display = "none";
-        }
+            if (!response.ok) throw new Error('Server response was not ok');
+
+            const data = await response.json();
+
+            // Safety check: ensure we actually got the data before redirecting
+            if (!data || !data.summary_3) {
+              throw new Error(data.error || "Empty synthesis returned from server.");
+            }
+
+            const payload = {
+              summary_1: data.summary_1 || "",
+              summary_2: data.summary_2 || "",
+              summary_3: data.summary_3 || "",
+              radiance: data.radiance || "",
+              radiance_lens: data.radiance_lens || "Mirror of Becoming",
+              primary_operator: (data.operators && data.operators.primary) || "FORGE"
+            };
+
+            // Clear old data and set new data in both storage types
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            Object.entries(payload).forEach(([k, v]) => {
+              localStorage.setItem(k, v);
+              sessionStorage.setItem(k, v);
+            });
+
+            window.location.href = "/results";
+          } catch (error) {
+            console.error("Fetch error:", error);
+            alert(`Error: ${error.message}. Please try again.`);
+          } finally {
+            activationBtn.disabled = false;
+            loading.style.display = "none";
+          }
+        });
+
+        displaySuggestedSet();
       });
-
-      displaySuggestedSet();
-    });
-  </script>
+    </script>
 </body>
 </html>
