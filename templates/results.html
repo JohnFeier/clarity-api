@@ -4,209 +4,43 @@
   <meta charset="UTF-8" />
   <title>Context Finder — Synthesis Results</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Montserrat:wght@400;600;700&family=Pacifico&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Montserrat:wght@600;700&family=Pacifico&display=swap" rel="stylesheet" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-SHNFKJPC74"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-SHNFKJPC74');
-  </script>
-
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-SHNFKJPC74');</script>
   <style>
-    .stage-heading {
-      display: block;
-      font-size: 0.85rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: #005f5f;
-      margin: 0 0 12px 0;
-      padding-bottom: 8px;
-      border-bottom: 1px solid rgba(0, 128, 128, 0.2);
-    }
-
-    .tier-three-highlight {
-      border-left: 4px solid #008080;
-      padding-left: 14px;
-      font-weight: 500;
-    }
-
-    .action-row {
-      display: flex;
-      gap: 10px;
-      margin-top: 16px;
-      flex-wrap: wrap;
-    }
-
-    .secondary-button {
-      background-color: transparent;
-      color: #005f5f;
-      border: 1.5px solid #008080;
-      padding: 0.55rem 1rem;
-      font-size: 0.9rem;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .secondary-button:hover {
-      background-color: rgba(0, 128, 128, 0.1);
-    }
-
-    .secondary-button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .primary-accent-button {
-      background-color: #005f5f;
-      color: #ffdead;
-      border: 1.5px solid #005f5f;
-      padding: 0.55rem 1rem;
-      font-size: 0.9rem;
-      font-weight: 600;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .primary-accent-button:hover {
-      background-color: #004949;
-    }
-
-    .bluesky-box {
-      display: none;
-      margin-top: 16px;
-      padding: 14px;
-      border-radius: 8px;
-      background-color: rgba(0, 128, 128, 0.06);
-      border: 1px solid rgba(0, 128, 128, 0.25);
-    }
-
-    .bluesky-textarea {
-      width: 100%;
-      box-sizing: border-box;
-      min-height: 82px;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid rgba(0, 95, 95, 0.35);
-      font-family: inherit;
-      font-size: 0.95rem;
-      line-height: 1.45;
-      color: #163030;
-      background-color: #ffffff;
-      resize: vertical;
-    }
-
-    .bluesky-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 10px;
-      flex-wrap: wrap;
-      gap: 8px;
-      font-size: 0.85rem;
-      color: #005f5f;
-    }
-
-    .char-count-ok {
-      font-weight: 600;
-      color: #005f5f;
-    }
-
-    .char-count-over {
-      font-weight: 700;
-      color: #b00020;
-    }
-
-    .radiance-subtext {
-      font-size: 0.92rem;
-      color: #2c4a4a;
-      margin: 0 0 12px 0;
-    }
-
-    .radiance-poetry-box {
-      display: none;
-      text-align: left;
-      margin: 0 0 16px 0;
-      padding: 14px 16px;
-      border-radius: 8px;
-      background-color: rgba(0, 128, 128, 0.06);
-      border-left: 4px solid #008080;
-      color: #163030;
-      font-style: italic;
-      line-height: 1.6;
-      white-space: pre-line;
-    }
-
-    .radiance-poetry-footer {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 10px;
-      font-style: normal;
-    }
-
-    .lens-control-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 14px;
-      flex-wrap: wrap;
-    }
-
-    .lens-control-row label {
-      font-size: 0.88rem;
-      font-weight: 600;
-      color: #005f5f;
-    }
-
-    .lens-select {
-      padding: 0.45rem 0.75rem;
-      border-radius: 6px;
-      border: 1.5px solid #008080;
-      background-color: #ffffff;
-      color: #163030;
-      font-family: inherit;
-      font-size: 0.9rem;
-      cursor: pointer;
-    }
-
-    .image-actions {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-top: 14px;
-      flex-wrap: wrap;
-    }
-
-    .pulse-loading {
-      display: none;
-      margin-top: 18px;
-      font-style: italic;
-      color: #005f5f;
-      animation: pulseFade 1.6s infinite ease-in-out;
-    }
-
-    @keyframes pulseFade {
-      0%, 100% { opacity: 0.55; }
-      50% { opacity: 1; }
-    }
+    .stage-heading{display:block;font-size:.85rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#005f5f;margin:0 0 12px;padding-bottom:8px;border-bottom:1px solid rgba(0,128,128,.2)}
+    .tier-three-highlight{border-left:4px solid #008080;padding-left:14px;font-weight:500}
+    .action-row,.image-actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+    .image-actions{justify-content:center}
+    .secondary-button{background:transparent;color:#005f5f;border:1.5px solid #008080;padding:.55rem 1rem;font-size:.9rem;border-radius:6px;cursor:pointer;text-decoration:none;display:inline-block}
+    .secondary-button:hover{background:rgba(0,128,128,.1)}
+    .secondary-button:disabled{opacity:.5;cursor:not-allowed}
+    .primary-accent-button{background:#005f5f;color:#ffdead;border:1.5px solid #005f5f;padding:.55rem 1rem;font-size:.9rem;font-weight:600;border-radius:6px;cursor:pointer}
+    .primary-accent-button:hover{background:#004949}
+    .bluesky-box{display:none;margin-top:16px;padding:14px;border-radius:8px;background:rgba(0,128,128,.06);border:1px solid rgba(0,128,128,.25)}
+    .bluesky-textarea{width:100%;box-sizing:border-box;min-height:82px;padding:10px;border-radius:6px;border:1px solid rgba(0,95,95,.35);font-family:inherit;font-size:.95rem;line-height:1.45;color:#163030;background:#fff;resize:vertical}
+    .bluesky-meta{display:flex;justify-content:space-between;align-items:center;margin-top:10px;flex-wrap:wrap;gap:8px;font-size:.85rem;color:#005f5f}
+    .char-count-ok{font-weight:600;color:#005f5f}
+    .char-count-over{font-weight:700;color:#b00020}
+    .radiance-subtext{font-size:.92rem;color:#2c4a4a;margin:0 0 12px}
+    .radiance-poetry-box{display:none;text-align:left;margin:0 0 16px;padding:14px 16px;border-radius:8px;background:rgba(0,128,128,.06);border-left:4px solid #008080;color:#163030;font-style:italic;line-height:1.6;white-space:pre-line}
+    .radiance-poetry-footer{display:flex;justify-content:flex-end;margin-top:10px;font-style:normal}
+    .lens-control-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+    .lens-control-row label{font-size:.88rem;font-weight:600;color:#005f5f}
+    .lens-select{padding:.45rem .75rem;border-radius:6px;border:1.5px solid #008080;background:#fff;color:#163030;font-family:inherit;font-size:.9rem;cursor:pointer}
+    .pulse-loading{display:none;margin-top:18px;font-style:italic;color:#005f5f}
   </style>
 </head>
 <body class="inner-page-body">
-
   <div class="results-card">
     <h2 class="stage-heading">Clarity • Tier 1 — Pairwise Intersections</h2>
     <div class="tier-content" id="tier1"></div>
   </div>
-
   <div class="results-card">
     <h2 class="stage-heading">Clarity • Tier 2 — Converging Tension</h2>
     <div class="tier-content" id="tier2"></div>
   </div>
-
   <div class="results-card">
     <h2 class="stage-heading">Clarity • Tier 3 — Core Synthesis</h2>
     <div class="tier-content tier-three-highlight" id="tier3"></div>
@@ -214,57 +48,42 @@
       <button type="button" id="copy-btn" class="secondary-button">Copy All Tiers</button>
       <button type="button" id="bsky-draft-btn" class="secondary-button">Draft Bluesky Reply (&lt;300 chars)</button>
     </div>
-
     <div id="bluesky-box" class="bluesky-box">
       <textarea id="bluesky-textarea" class="bluesky-textarea" maxlength="320" placeholder="Generating link-free Bluesky reply..."></textarea>
       <div class="bluesky-meta">
         <span id="bsky-char-count" class="char-count-ok">0 / 300 chars</span>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button type="button" id="bsky-copy-btn" class="secondary-button">Copy Reply</button>
-          <a id="bsky-intent-link" href="https://bsky.app/intent/compose" target="_blank" rel="noopener" class="secondary-button" style="text-decoration: none; display: inline-block;">
-            Open in Bluesky
-          </a>
+          <a id="bsky-intent-link" href="https://bsky.app/intent/compose" target="_blank" rel="noopener" class="secondary-button">Open in Bluesky</a>
         </div>
       </div>
     </div>
   </div>
-
-  <div class="results-card" style="text-align: center;">
-    <h2 class="stage-heading" style="text-align: left;">
+  <div class="results-card" style="text-align:center;">
+    <h2 class="stage-heading" style="text-align:left;">
       Radiance • Poetic &amp; Visual Interpretation
-      <span id="active-lens-badge" title="Active conceptual force and Radiance aesthetic lens" style="float: right; font-size: 0.78rem; background: rgba(0,128,128,0.12); padding: 2px 8px; border-radius: 12px; cursor: help;"></span>
+      <span id="active-lens-badge" style="float:right;font-size:.78rem;background:rgba(0,128,128,.12);padding:2px 8px;border-radius:12px;"></span>
     </h2>
-
     <div id="radiance-poetry-box" class="radiance-poetry-box">
       <div id="radiance-poetry-text"></div>
       <div class="radiance-poetry-footer">
-        <button type="button" id="copy-radiance-btn" class="secondary-button" style="padding: 0.35rem 0.75rem; font-size: 0.82rem;">
-          Copy Reflection
-        </button>
+        <button type="button" id="copy-radiance-btn" class="secondary-button" style="padding:.35rem .75rem;font-size:.82rem;">Copy Reflection</button>
       </div>
     </div>
-
     <p class="radiance-subtext">Auto-matched to this triad’s driving force (<strong id="lens-label-inline">FORGE → Mirror of Becoming</strong>), or pick any aesthetic lens below:</p>
-
     <div class="lens-control-row">
       <label for="lens-selector">Visual Lens:</label>
       <select id="lens-selector" class="lens-select"></select>
     </div>
-
-    <button id="radiance-btn" class="back-button" style="margin-top: 0; width: 100%;">
-      Generate Radiance
-    </button>
-    <div id="image-loading" class="pulse-loading">
-      Radiance is painting your scene (usually 20–35 seconds)...
-    </div>
-    <div id="image-container" style="margin-top: 20px;"></div>
+    <button id="radiance-btn" class="back-button" style="margin-top:0;width:100%;">Generate Radiance</button>
+    <div id="image-loading" class="pulse-loading">Radiance is painting your scene (usually 20–35 seconds)...</div>
+    <div id="image-container" style="margin-top:20px;"></div>
   </div>
-
   <button class="back-button" onclick="window.location.href='/home'">← New Synthesis</button>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const LENS_CATALOG = [
+      const LENSES = [
         { operator: "FORGE", lens: "Mirror of Becoming" },
         { operator: "ERODE", lens: "Ecliptic Memory" },
         { operator: "COLLIDE", lens: "Catalyst Loop" },
@@ -278,227 +97,205 @@
       const tier1 = localStorage.getItem("summary_1") || "No result found.";
       const tier2 = localStorage.getItem("summary_2") || "No result found.";
       let tier3 = localStorage.getItem("summary_3") || "No result found.";
+      if (tier3.includes("[object Object]")) tier3 = "Synthesis complete.";
+
       const radianceText = (localStorage.getItem("radiance") || "").trim();
       const autoLens = localStorage.getItem("radiance_lens") || "Mirror of Becoming";
-      const autoOperator = localStorage.getItem("primary_operator") || "FORGE";
-
+      const autoOp = localStorage.getItem("primary_operator") || "FORGE";
       let selectedLens = autoLens;
-      let selectedOperator = autoOperator;
-
-      if (tier3 === "[object Object]" || (typeof tier3 === 'string' && tier3.includes("[object Object]"))) {
-        tier3 = "Synthesis complete. Exploring deeper implications...";
-      }
+      let selectedOp = autoOp;
 
       document.getElementById('tier1').textContent = tier1;
       document.getElementById('tier2').textContent = tier2;
       document.getElementById('tier3').textContent = tier3;
+      document.getElementById('lens-label-inline').textContent = `${autoOp} → ${autoLens}`;
 
-      const lensBadge = document.getElementById("active-lens-badge");
-      const lensInline = document.getElementById("lens-label-inline");
-      const lensSelector = document.getElementById("lens-selector");
+      const badge = document.getElementById('active-lens-badge');
+      const syncBadge = () => { badge.textContent = `${selectedOp} • ${selectedLens}`; };
+      syncBadge();
 
-      function updateLensDisplay() {
-        if (lensBadge) {
-          lensBadge.textContent = `${selectedOperator} •${selectedLens}`;
-        }
+      const sel = document.getElementById('lens-selector');
+      if (!LENSES.some(x => x.lens === autoLens)) {
+        const o = document.createElement('option');
+        o.value = JSON.stringify({ operator: autoOp, lens: autoLens });
+        o.textContent = `${autoOp} — ${autoLens} (Auto-Matched)`;
+        sel.appendChild(o);
       }
-
-      if (lensInline) {
-        lensInline.textContent = `${autoOperator} →${autoLens}`;
-      }
-
-      if (lensSelector) {
-        const hasAutoInCatalog = LENS_CATALOG.some(item => item.lens === autoLens);
-        if (!hasAutoInCatalog) {
-          const customOpt = document.createElement("option");
-          customOpt.value = JSON.stringify({ operator: autoOperator, lens: autoLens });
-          customOpt.textContent = `${autoOperator} —${autoLens} (Auto-Matched)`;
-          lensSelector.appendChild(customOpt);
-        }
-
-        LENS_CATALOG.forEach(item => {
-          const opt = document.createElement("option");
-          opt.value = JSON.stringify(item);
-          const isAuto = item.lens === autoLens;
-          opt.textContent = isAuto
-            ? `${item.operator} —${item.lens} (Auto-Matched)`
-            : `${item.operator} —${item.lens}`;
-          if (isAuto) opt.selected = true;
-          lensSelector.appendChild(opt);
-        });
-
-        lensSelector.addEventListener("change", (e) => {
-          try {
-            const chosen = JSON.parse(e.target.value);
-            selectedOperator = chosen.operator;
-            selectedLens = chosen.lens;
-            updateLensDisplay();
-          } catch (err) {
-            console.error("Lens selection parse error:", err);
-          }
-        });
-      }
-
-      updateLensDisplay();
-
-      const poetryBox = document.getElementById("radiance-poetry-box");
-      const poetryTextEl = document.getElementById("radiance-poetry-text");
-      const copyRadianceBtn = document.getElementById("copy-radiance-btn");
-
-      if (radianceText && poetryBox && poetryTextEl) {
-        poetryTextEl.textContent = radianceText;
-        poetryBox.style.display = "block";
-      }
-
-      if (copyRadianceBtn) {
-        copyRadianceBtn.addEventListener("click", async () => {
-          try {
-            await navigator.clipboard.writeText(radianceText);
-            copyRadianceBtn.textContent = "Copied!";
-            setTimeout(() => { copyRadianceBtn.textContent = "Copy Reflection"; }, 2000);
-          } catch (err) {
-            copyRadianceBtn.textContent = "Copy failed";
-          }
-        });
-      }
-
-      const radianceBtn = document.getElementById("radiance-btn");
-      const loadingDiv = document.getElementById("image-loading");
-      const container = document.getElementById("image-container");
-      const bskyDraftBtn = document.getElementById("bsky-draft-btn");
-
-      if (tier3 === "No result found.") {
-        radianceBtn.disabled = true;
-        radianceBtn.style.opacity = "0.5";
-        radianceBtn.style.cursor = "not-allowed";
-        bskyDraftBtn.disabled = true;
-      }
-
-      const copyBtn = document.getElementById("copy-btn");
-      copyBtn.addEventListener("click", async () => {
-        const formatted = `TIER 1 — PAIRWISE INTERSECTIONS:\n${tier1}\n\nTIER 2 — CONVERGING TENSION:\n${tier2}\n\nTIER 3 — CORE SYNTHESIS:\n${tier3}`;
-        try {
-          await navigator.clipboard.writeText(formatted);
-          copyBtn.textContent = "Copied!";
-          setTimeout(() => { copyBtn.textContent = "Copy All Tiers"; }, 2000);
-        } catch (err) {
-          copyBtn.textContent = "Copy failed";
-        }
+      LENSES.forEach(item => {
+        const o = document.createElement('option');
+        o.value = JSON.stringify(item);
+        const isAuto = item.lens === autoLens;
+        o.textContent = `${item.operator} — ${item.lens}${isAuto ? ' (Auto-Matched)' : ''}`;
+        if (isAuto) o.selected = true;
+        sel.appendChild(o);
+      });
+      sel.addEventListener('change', e => {
+        const c = JSON.parse(e.target.value);
+        selectedOp = c.operator;
+        selectedLens = c.lens;
+        syncBadge();
       });
 
-      const bskyBox = document.getElementById("bluesky-box");
-      const bskyTextarea = document.getElementById("bluesky-textarea");
-      const bskyCharCount = document.getElementById("bsky-char-count");
-      const bskyCopyBtn = document.getElementById("bsky-copy-btn");
-      const bskyIntentLink = document.getElementById("bsky-intent-link");
+      if (radianceText) {
+        document.getElementById('radiance-poetry-text').textContent = radianceText;
+        document.getElementById('radiance-poetry-box').style.display = 'block';
+      }
+      document.getElementById('copy-radiance-btn').addEventListener('click', async function() {
+        await navigator.clipboard.writeText(radianceText);
+        this.textContent = "Copied!";
+        setTimeout(() => this.textContent = "Copy Reflection", 2000);
+      });
 
-      function updateBskyMeta() {
-        const text = bskyTextarea.value;
-        const len = text.length;
-        bskyCharCount.textContent = `${len} / 300 chars`; bskyCharCount.className = len <= 300 ? "char-count-ok" : "char-count-over"; bskyIntentLink.href = `https://bsky.app/intent/compose?text=${encodeURIComponent(text)}`;
+      const radBtn = document.getElementById('radiance-btn');
+      const bskyDraftBtn = document.getElementById('bsky-draft-btn');
+      if (tier3 === "No result found.") {
+        radBtn.disabled = true;
+        bskyDraftBtn.disabled = true;
       }
 
-      bskyTextarea.addEventListener("input", updateBskyMeta);
+      document.getElementById('copy-btn').addEventListener('click', async function() {
+        const txt = `TIER 1:\n${tier1}\n\nTIER 2:\n${tier2}\n\nTIER 3:\n${tier3}`;
+        await navigator.clipboard.writeText(txt);
+        this.textContent = "Copied!";
+        setTimeout(() => this.textContent = "Copy All Tiers", 2000);
+      });
 
-      bskyDraftBtn.addEventListener("click", async () => {
+      const bskyBox = document.getElementById('bluesky-box');
+      const bskyArea = document.getElementById('bluesky-textarea');
+      const bskyCount = document.getElementById('bsky-char-count');
+      const bskyLink = document.getElementById('bsky-intent-link');
+      const updateBsky = () => {
+        const t = bskyArea.value;
+        bskyCount.textContent = `${t.length} / 300 chars`;
+        bskyCount.className = t.length <= 300 ? 'char-count-ok' : 'char-count-over';
+        bskyLink.href = `https://bsky.app/intent/compose?text=${encodeURIComponent(t)}`;
+      };
+      bskyArea.addEventListener('input', updateBsky);
+
+      bskyDraftBtn.addEventListener('click', async () => {
         bskyDraftBtn.disabled = true;
-        bskyDraftBtn.textContent = "Distilling Reply...";
-        bskyBox.style.display = "block";
-        bskyTextarea.value = "Distilling a link-free Bluesky reply...";
-        updateBskyMeta();
-
+        bskyBox.style.display = 'block';
+        bskyArea.value = "Distilling reply...";
+        updateBsky();
         try {
-          const response = await fetch("/bluesky-reply", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
+          const r = await fetch('/bluesky-reply', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ tier_3: tier3 })
           });
-
-          if (!response.ok) throw new Error("Failed to generate Bluesky reply");
-
-          const data = await response.json();
-          bskyTextarea.value = data.reply || tier3;
-          updateBskyMeta();
-          bskyDraftBtn.textContent = "Regenerate Reply";
-        } catch (error) {
-          console.error("Bluesky draft error:", error);
-          bskyTextarea.value = tier3.length <= 295 ? tier3 : tier3.slice(0, 292) + "...";
-          updateBskyMeta();
-          bskyDraftBtn.textContent = "Draft Bluesky Reply (<300 chars)";
-        } finally {
-          bskyDraftBtn.disabled = false;
+          const d = await r.json();
+          bskyArea.value = d.reply || tier3;
+        } catch {
+          bskyArea.value = tier3.slice(0, 295);
         }
+        updateBsky();
+        bskyDraftBtn.disabled = false;
       });
 
-      bskyCopyBtn.addEventListener("click", async () => {
-        try {
-          await navigator.clipboard.writeText(bskyTextarea.value);
-          bskyCopyBtn.textContent = "Copied!";
-          setTimeout(() => { bskyCopyBtn.textContent = "Copy Reply"; }, 2000);
-        } catch (err) {
-          bskyCopyBtn.textContent = "Copy failed";
-        }
+      document.getElementById('bsky-copy-btn').addEventListener('click', async function() {
+        await navigator.clipboard.writeText(bskyArea.value);
+        this.textContent = "Copied!";
+        setTimeout(() => this.textContent = "Copy Reply", 2000);
       });
 
-      function wrapCanvasText(ctx, text, maxWidth) {
-        const words = text.split(/\s+/);
-        const lines = [];
-        let currentLine = "";
+      async function buildSocialCard(src, text, op, lens) {
+        const safeSrc = src.startsWith('data:') ? src : `/proxy-image?url=${encodeURIComponent(src)}`;
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = safeSrc; });
 
-        for (let i = 0; i < words.length; i++) {
-          const testLine = currentLine ? `${currentLine}${words[i]}` : words[i];
-          if (ctx.measureText(testLine).width <= maxWidth) {
-            currentLine = testLine;
-          } else {
-            if (currentLine) lines.push(currentLine);
-            currentLine = words[i];
-          }
-        }
-        if (currentLine) lines.push(currentLine);
-        return lines;
+        const c = document.createElement('canvas');
+        c.width = 1080; c.height = 1350;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0, 1080, 1080);
+        ctx.fillStyle = '#004d4d';
+        ctx.fillRect(0, 1080, 1080, 270);
+        ctx.fillStyle = '#d4af37';
+        ctx.fillRect(0, 1080, 1080, 4);
+        ctx.font = '700 20px Montserrat, sans-serif';
+        ctx.textBaseline = 'top';
+        ctx.fillText(`${op.toUpperCase()}  •  ${lens.toUpperCase()}`, 54, 1106);
+
+        let size = 29;
+        ctx.font = `600 ${size}px "Cormorant Garamond", Georgia, serif`;
+        const wrap = (maxW) => {
+          const words = `“${text}”`.split(/\s+/);
+          const out = []; let line = '';
+          words.forEach(w => {
+            const test = line ? `${line} ${w}` : w;
+            if (ctx.measureText(test).width <= maxW) line = test;
+            else { if (line) out.push(line); line = w; }
+          });
+          if (line) out.push(line);
+          return out;
+        };
+        let lines = wrap(972);
+        if (lines.length > 4) { size = 24; ctx.font = `600 ${size}px "Cormorant Garamond", Georgia, serif`; lines = wrap(972).slice(0, 5); }
+        ctx.fillStyle = '#ffdead';
+        lines.forEach((l, i) => ctx.fillText(l, 54, 1144 + i * Math.round(size * 1.28)));
+
+        ctx.fillStyle = 'rgba(255,222,173,0.72)';
+        ctx.font = '600 18px Montserrat, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText('CONTEXT FINDER  •  CLARITY & RADIANCE', 1026, 1312);
+
+        const a = document.createElement('a');
+        a.download = `context-finder-${lens.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.jpg`;
+        a.href = c.toDataURL('image/jpeg', 0.92);
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
       }
 
-      async function downloadBlueskySocialCard(imgSrc, synthesisText, operatorLabel, lensLabel) {
-        const safeSrc = imgSrc.startsWith("data:")
-          ? imgSrc
-          : `/proxy-image?url=${encodeURIComponent(imgSrc)}`;  const img = new Image(); img.crossOrigin = "anonymous";  await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = () => reject(new Error("Could not load image onto canvas")); img.src = safeSrc; });  const canvas = document.createElement("canvas"); const W = 1080; const H = 1350; canvas.width = W; canvas.height = H; const ctx = canvas.getContext("2d");  // Top 1080x1080 artwork ctx.drawImage(img, 0, 0, W, 1080);  // Bottom 1080x270 dark-teal editorial plate ctx.fillStyle = "#004d4d"; ctx.fillRect(0, 1080, W, 270);  // Subtle gold divider rule ctx.fillStyle = "#d4af37"; ctx.fillRect(0, 1080, W, 4);  // Eyebrow badge: OPERATOR • LENS ctx.fillStyle = "#d4af37"; ctx.font = "700 20px Montserrat, sans-serif"; ctx.textBaseline = "top"; ctx.fillText(`${operatorLabel.toUpperCase()}  •  ${lensLabel.toUpperCase()}`, 54, 1106);  // Tier 3 Synthesis text (auto-scales between 29px and 24px for long sentences) const maxWidth = W - 108; let fontSize = 29; ctx.font = `600 ${fontSize}px "Cormorant Garamond", Georgia, serif`;
-        let lines = wrapCanvasText(ctx, `“${synthesisText}”`, maxWidth);  if (lines.length > 4) { fontSize = 24; ctx.font = `600 ${fontSize}px "Cormorant Garamond", Georgia, serif`;
-          lines = wrapCanvasText(ctx, `“${synthesisText}”`, maxWidth).slice(0, 5); }  ctx.fillStyle = "#ffdead"; const lineHeight = Math.round(fontSize * 1.28); lines.forEach((line, idx) => { ctx.fillText(line, 54, 1144 + idx * lineHeight); });  // Subtle footer signature ctx.fillStyle = "rgba(255, 222, 173, 0.72)"; ctx.font = "600 18px Montserrat, sans-serif"; ctx.textAlign = "right"; ctx.fillText("CONTEXT FINDER  •  CLARITY & RADIANCE", W - 54, 1312); ctx.textAlign = "left";  // Export as high-quality JPEG (~350-500 KB, well under Bluesky's 2 MB limit) const dataUrl = canvas.toDataURL("image/jpeg", 0.92); const link = document.createElement("a"); const slug = lensLabel.toLowerCase().replace(/[^a-z0-9]+/g, "-"); link.download = `context-finder-${slug}.jpg`;
-        link.href = dataUrl;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-
-      radianceBtn.addEventListener("click", async () => {
-        const prompt = tier3;
-        const activeLensAtPaint = selectedLens;
-        const activeOpAtPaint = selectedOperator;
-
-        radianceBtn.disabled = true;
-        radianceBtn.textContent = `Painting via ${activeLensAtPaint}...`;
-        loadingDiv.style.display = "block";
-        container.innerHTML = "";
+      radBtn.addEventListener('click', async () => {
+        const activeLens = selectedLens;
+        const activeOp = selectedOp;
+        const loader = document.getElementById('image-loading');
+        const box = document.getElementById('image-container');
+        radBtn.disabled = true;
+        radBtn.textContent = `Painting via ${activeLens}...`;
+        loader.style.display = 'block';
+        box.innerHTML = '';
 
         try {
-          const response = await fetch("/generate-image", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              prompt,
-              radiance_lens: activeLensAtPaint,
-              primary_operator: activeOpAtPaint
-            })
+          const res = await fetch('/generate-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: tier3, radiance_lens: activeLens, primary_operator: activeOp })
+          });
+          if (!res.ok) throw new Error('Failed');
+          const data = await res.json();
+          const url = data.image_url;
+
+          box.innerHTML = `
+            <img src="${url}" alt="Radiance (${activeLens})" style="max-width:100%;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,.3);" />
+            <div class="image-actions">
+              <button type="button" id="dl-card-btn" class="primary-accent-button">Download Bluesky Card (4:5)</button>
+              <a href="${url}" download="context-finder-radiance.png" target="_blank" rel="noopener" class="secondary-button">Open / Save Raw Image</a>
+              <button type="button" id="cp-alt-btn" class="secondary-button">Copy Alt Text</button>
+            </div>`;
+
+          document.getElementById('dl-card-btn').addEventListener('click', async function() {
+            this.disabled = true; this.textContent = 'Building Card...';
+            try { await buildSocialCard(url, tier3, activeOp, activeLens); this.textContent = 'Card Downloaded!'; }
+            catch { this.textContent = 'Export Failed'; }
+            setTimeout(() => { this.disabled = false; this.textContent = 'Download Bluesky Card (4:5)'; }, 2200);
           });
 
-          if (!response.ok) throw new Error('Image generation failed');
-
-          const data = await response.json();
-          const imageUrl = data.image_url;
-
-          container.innerHTML = `
-            <img src="${imageUrl}" alt="Radiance Visual Synthesis (${activeLensAtPaint})" 
-                 style="max-width:100%; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);" />
-            <div class="image-actions">
-              <button type="button" id="download-social-card-btn" class="primary-accent-button">
-                Download Bluesky Card (4
+          document.getElementById('cp-alt-btn').addEventListener('click', async function() {
+            await navigator.clipboard.writeText(`Radiance visual interpretation (${activeOp} • ${activeLens}): ${tier3}`);
+            this.textContent = 'Alt Text Copied!';
+            setTimeout(() => this.textContent = 'Copy Alt Text', 2000);
+          });
+        } catch {
+          box.textContent = 'Unable to visualize at this moment. Please try again.';
+        } finally {
+          radBtn.disabled = false;
+          radBtn.textContent = 'Generate Radiance';
+          loader.style.display = 'none';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
