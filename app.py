@@ -129,6 +129,23 @@ def generate_image():
         print(f"🔥 Image Error: {str(e)}", flush=True)
         return jsonify({"error": str(e)}), 500
 
+@app.route('/proxy-image')
+def proxy_image():
+    target_url = request.args.get('url', '')
+    if not target_url.startswith(('https://oaidalleapiprodscus.', 'https://oaidalleapi.')):
+        return jsonify({"error": "Invalid image source"}), 400
+    try:
+        resp = requests.get(target_url, timeout=20)
+        resp.raise_for_status()
+        from io import BytesIO
+        return send_file(
+            BytesIO(resp.content),
+            mimetype=resp.headers.get('Content-Type', 'image/png')
+        )
+    except Exception as e:
+        print(f"🔥 Proxy Image Error: {str(e)}", flush=True)
+        return jsonify({"error": "Failed to fetch image"}), 502
+
 # 6B. BLUESKY REPLY GENERATOR (LINK-FREE, <300 CHARS)
 @app.route('/bluesky-reply', methods=['POST'])
 def bluesky_reply():
