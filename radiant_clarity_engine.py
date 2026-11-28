@@ -16,7 +16,12 @@ RADIANT_SIGNATURES = [
         "emotion": "Hope",
         "modality": "Embodied",
         "logic": "Analogical",
-        "visual_motif": "Luminous gestation, molten light crystallizing into new architecture"
+        "visual_motif": "Luminous gestation, molten light crystallizing into new architecture",
+        "visual_style": (
+            "Luminous chiaroscuro oil painting blended with sacred glasswork; warm molten gold, "
+            "amber, and deep teal shadows; upward spiral composition where raw elements coalesce "
+            "into glowing crystalline structures; radiant volumetric light."
+        )
     },
     {
         "operator": "ERODE",
@@ -28,7 +33,12 @@ RADIANT_SIGNATURES = [
         "emotion": "Longing",
         "modality": "Conceptual",
         "logic": "Metaphorical",
-        "visual_motif": "Weathered stone, dissolving edges, twilight eclipse over receding forms"
+        "visual_motif": "Weathered stone, dissolving edges, twilight eclipse over receding forms",
+        "visual_style": (
+            "Atmospheric poetic realism with wind-eroded sandstone, drifting ash, and oxidized copper; "
+            "muted twilight indigo, slate grey, and pale silver eclipse halo; receding horizon lines "
+            "and dissolving silhouettes evoking impermanence."
+        )
     },
     {
         "operator": "COLLIDE",
@@ -40,7 +50,12 @@ RADIANT_SIGNATURES = [
         "emotion": "Excitement",
         "modality": "Visual",
         "logic": "Causal",
-        "visual_motif": "Intersecting shockwaves, kinetic sparks, split-hemisphere tension"
+        "visual_motif": "Intersecting shockwaves, kinetic sparks, split-hemisphere tension",
+        "visual_style": (
+            "High-contrast dramatic split-hemisphere composition with diagonal fault lines and kinetic shockwaves; "
+            "incandescent crimson-orange sparks colliding against electric cobalt shadow; sharp architectural "
+            "fracture geometry and dynamic motion."
+        )
     },
     {
         "operator": "BIND",
@@ -52,7 +67,12 @@ RADIANT_SIGNATURES = [
         "emotion": "Reverence",
         "modality": "Structural",
         "logic": "Topological",
-        "visual_motif": "Interlocking golden threads, symmetrical resonance, bridged constellations"
+        "visual_motif": "Interlocking golden threads, symmetrical resonance, bridged constellations",
+        "visual_style": (
+            "Intricate Renaissance-meets-sacred-geometry tapestry; fine luminous golden filaments weaving "
+            "separate worlds into symmetrical balance; warm candlelight, emerald, and ivory palette; "
+            "harmonic bridges and cymatic resonance ripples."
+        )
     },
     {
         "operator": "TRANSMIT",
@@ -64,7 +84,12 @@ RADIANT_SIGNATURES = [
         "emotion": "Wonder",
         "modality": "Acoustic-Luminous",
         "logic": "Propagative",
-        "visual_motif": "Refracted spectral beams, concentric ripples carrying signal across horizons"
+        "visual_motif": "Refracted spectral beams, concentric ripples carrying signal across horizons",
+        "visual_style": (
+            "Expansive panoramic futurist art; beams of light refracting through crystal prisms into "
+            "concentric acoustic and optical waves across vast landscapes; iridescent cyan, pearl white, "
+            "and solar gold; sense of effortless propagation."
+        )
     },
     {
         "operator": "CONTAIN",
@@ -76,7 +101,12 @@ RADIANT_SIGNATURES = [
         "emotion": "Stillness",
         "modality": "Architectural",
         "logic": "Deductive",
-        "visual_motif": "Sacred geometric vessels, gravitational horizons holding volatile energy in equilibrium"
+        "visual_motif": "Sacred geometric vessels, gravitational horizons holding volatile energy in equilibrium",
+        "visual_style": (
+            "Monumental brutalist-neoclassical architecture carved from dark obsidian and brushed bronze; "
+            "concentric stone rings and taut geometric thresholds holding intense inner fire in solemn "
+            "equilibrium; deep charcoal, warm alabaster, and controlled ember glow."
+        )
     },
     {
         "operator": "METABOLIZE",
@@ -88,7 +118,12 @@ RADIANT_SIGNATURES = [
         "emotion": "Renewal",
         "modality": "Living-System",
         "logic": "Dialectical",
-        "visual_motif": "Bioluminescent root networks, transmuting shadow and decay into living growth"
+        "visual_motif": "Bioluminescent root networks, transmuting shadow and decay into living growth",
+        "visual_style": (
+            "Surrealist botanical alchemy; intricate bioluminescent root and mycelial networks transforming "
+            "dark volcanic soil and decayed ruins into vibrant emerald moss and blooming light; "
+            "deep forest viridian, rich umber, and bioluminescent turquoise."
+        )
     },
     {
         "operator": "ENDURE",
@@ -100,11 +135,17 @@ RADIANT_SIGNATURES = [
         "emotion": "Serenity",
         "modality": "Archetypal",
         "logic": "Recursive",
-        "visual_motif": "Concentric brass orbital rings, ancient monoliths enduring across turning eras"
+        "visual_motif": "Concentric brass orbital rings, ancient monoliths enduring across turning eras",
+        "visual_style": (
+            "Timeless celestial engraving meets hyper-detailed cosmic realism; weathered granite monoliths "
+            "framed by giant rotating brass astrolabe rings and star trails; deep midnight ultramarine, "
+            "burnished bronze, and starlight silver; serene cyclical permanence."
+        )
     }
 ]
 
 OPERATOR_LENS_MAP = {sig["operator"]: sig for sig in RADIANT_SIGNATURES}
+NAME_LENS_MAP = {sig["name"].lower(): sig for sig in RADIANT_SIGNATURES}
 
 
 def get_signature_for_operator(primary_operator):
@@ -112,6 +153,25 @@ def get_signature_for_operator(primary_operator):
     if not primary_operator:
         return RADIANT_SIGNATURES[0]
     return OPERATOR_LENS_MAP.get(primary_operator.strip().upper(), RADIANT_SIGNATURES[0])
+
+
+def get_signature_by_name_or_operator(lens_name="", primary_operator=""):
+    """Resolves a Radiant Signature from either its lens name or its vertical operator."""
+    if lens_name and lens_name.strip().lower() in NAME_LENS_MAP:
+        return NAME_LENS_MAP[lens_name.strip().lower()]
+    return get_signature_for_operator(primary_operator)
+
+
+def build_radiance_image_prompt(core_synthesis, lens_name="", primary_operator=""):
+    """Constructs an operator-tailored visual art direction prompt for /generate-image."""
+    sig = get_signature_by_name_or_operator(lens_name=lens_name, primary_operator=primary_operator)
+    return (
+        f"Visual Lens: {sig['name']} ({sig['operator']} Force Vector). "
+        f"Artistic Direction & Palette: {sig['visual_style']} "
+        f"Symbolic Motif: {sig['visual_motif']}. "
+        f"Conceptual Scene to Depict: {core_synthesis} "
+        f"Ultra-detailed, museum-grade symbolic artwork, rich atmospheric depth, zero cluttered labels or gibberish text."
+    )
 
 
 def run_radiance_engine(noun1, noun2, noun3, signature, secondary_operator=""):
@@ -144,7 +204,7 @@ def run_radiance_engine(noun1, noun2, noun3, signature, secondary_operator=""):
 
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-4o-mini",  # Fast and efficient for poetic text
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a poetic philosopher and master of metaphor."},
                 {"role": "user", "content": prompt}
