@@ -160,8 +160,11 @@
   </div>
 
   <div class="results-card" style="text-align: center;">
-    <h2 class="stage-heading" style="text-align: left;">Radiance • Visual Interpretation</h2>
-    <p class="radiance-subtext">Let Radiance paint a visual scene directly from Clarity's Tier Three synthesis.</p>
+    <h2 class="stage-heading" style="text-align: left;">
+      Radiance • Visual Interpretation
+      <span id="active-lens-badge" style="float: right; font-size: 0.78rem; background: rgba(0,128,128,0.12); padding: 2px 8px; border-radius: 12px;"></span>
+    </h2>
+    <p class="radiance-subtext">Let Radiance paint a visual scene through her operator-matched interpretive lens.</p>
     <button id="radiance-btn" class="back-button" style="margin-top: 0; width: 100%;">
       Generate Radiance
     </button>
@@ -178,6 +181,8 @@
       const tier1 = localStorage.getItem("summary_1") || "No result found.";
       const tier2 = localStorage.getItem("summary_2") || "No result found.";
       let tier3 = localStorage.getItem("summary_3") || "No result found.";
+      const radianceLens = localStorage.getItem("radiance_lens") || "Mirror of Becoming";
+      const primaryOperator = localStorage.getItem("primary_operator") || "FORGE";
 
       if (tier3 === "[object Object]" || (typeof tier3 === 'string' && tier3.includes("[object Object]"))) {
         tier3 = "Synthesis complete. Exploring deeper implications...";
@@ -186,6 +191,11 @@
       document.getElementById('tier1').textContent = tier1;
       document.getElementById('tier2').textContent = tier2;
       document.getElementById('tier3').textContent = tier3;
+
+      const lensBadge = document.getElementById("active-lens-badge");
+      if (lensBadge) {
+        lensBadge.textContent = `${primaryOperator} • ${radianceLens}`;
+      }
 
       const radianceBtn = document.getElementById("radiance-btn");
       const loadingDiv = document.getElementById("image-loading");
@@ -264,51 +274,4 @@
         try {
           await navigator.clipboard.writeText(bskyTextarea.value);
           bskyCopyBtn.textContent = "Copied!";
-          setTimeout(() => { bskyCopyBtn.textContent = "Copy Reply"; }, 2000);
-        } catch (err) {
-          bskyCopyBtn.textContent = "Copy failed";
-        }
-      });
-
-      radianceBtn.addEventListener("click", async () => {
-        const prompt = tier3;
-
-        radianceBtn.disabled = true;
-        radianceBtn.textContent = "Painting Vision...";
-        loadingDiv.style.display = "block";
-        container.innerHTML = "";
-
-        try {
-          const response = await fetch("/generate-image", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ prompt })
-          });
-
-          if (!response.ok) throw new Error('Image generation failed');
-
-          const data = await response.json();
-          const imageUrl = data.image_url;
-
-          container.innerHTML = `
-            <img src="${imageUrl}" alt="Radiance Visual Synthesis" 
-                 style="max-width:100%; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);" />
-            <div style="margin-top: 12px;">
-              <a href="${imageUrl}" download="context-finder-radiance.png" target="_blank" rel="noopener" class="secondary-button" style="text-decoration: none; display: inline-block;">
-                Open / Save Image
-              </a>
-            </div>
-          `;
-        } catch (error) {
-          console.error("Error generating image:", error);
-          container.textContent = "Unable to visualize at this moment. Please try again.";
-        } finally {
-          radianceBtn.disabled = false;
-          radianceBtn.textContent = "Generate Radiance";
-          loadingDiv.style.display = "none";
-        }
-      });
-    });
-  </script>
-</body>
-</html>
+          setTimeout(() => { bskyCopyBtn.textContent = "Copy Reply";
