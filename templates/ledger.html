@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Context Finder — Master Ledger Explorer</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link href="[https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Pacifico&display=swap](https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Pacifico&display=swap)" rel="stylesheet" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script async src="[https://www.googletagmanager.com/gtag/js?id=G-SHNFKJPC74](https://www.googletagmanager.com/gtag/js?id=G-SHNFKJPC74)"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-SHNFKJPC74');</script>
+  <style>
+    .ledger-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px}
+    .ledger-title{margin:0;font-size:1.35rem;color:#004d4d;font-weight:700}
+    .stats-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+    .stat-badge{background:rgba(0,128,128,.12);color:#004d4d;padding:6px 12px;border-radius:8px;font-size:.86rem;font-weight:600}
+    .tab-row{display:flex;gap:8px;margin-bottom:14px;border-bottom:1px solid rgba(0,128,128,.2);padding-bottom:10px;flex-wrap:wrap}
+    .tab-btn{background:transparent;color:#005f5f;border:1.5px solid #008080;padding:.45rem .95rem;border-radius:6px;font-size:.88rem;font-weight:600;cursor:pointer}
+    .tab-btn.active{background:#005f5f;color:#ffdead}
+    .search-input{width:100%;box-sizing:border-box;padding:10px 12px;border-radius:8px;border:1.5px solid rgba(0,95,95,.35);font-family:inherit;font-size:.95rem;margin-bottom:12px;background:#fff;color:#163030}
+    .op-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+    .op-chip{background:rgba(0,128,128,.08);color:#005f5f;border:1px solid rgba(0,128,128,.25);padding:4px 10px;border-radius:14px;font-size:.78rem;font-weight:700;cursor:pointer}
+    .op-chip.active{background:#005f5f;color:#ffdead;border-color:#005f5f}
+    .entry-card{padding:16px;border-radius:10px;background:rgba(255,255,255,.55);border:1px solid rgba(0,128,128,.2);margin-bottom:14px}
+    .entry-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+    .triad-words{font-weight:700;font-size:1.05rem;color:#004d4d}
+    .op-pill{background:#004d4d;color:#ffdead;padding:3px 9px;border-radius:12px;font-size:.75rem;font-weight:700}
+    .domain-line{font-size:.82rem;color:#2c4a4a;margin-bottom:8px}
+    .synth-quote{border-left:3px solid #008080;padding-left:12px;color:#163030;font-size:.94rem;line-height:1.5;margin-bottom:10px}
+    .entry-footer{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;font-size:.8rem;color:#2c4a4a}
+    .secondary-button{background:transparent;color:#005f5f;border:1.5px solid #008080;padding:.4rem .85rem;font-size:.84rem;border-radius:6px;cursor:pointer;text-decoration:none;display:inline-block;font-weight:600}
+    .secondary-button:hover{background:rgba(0,128,128,.1)}
+    .cand-table{width:100%;border-collapse:collapse;font-size:.9rem}
+    .cand-table th,.cand-table td{text-align:left;padding:8px 10px;border-bottom:1px solid rgba(0,128,128,.18)}
+    .cand-table th{color:#004d4d;font-size:.8rem;text-transform:uppercase}
+  </style>
+</head>
+<body class="inner-page-body">
+  <div class="results-card">
+    <div class="ledger-header">
+      <h1 class="ledger-title">Master Ledger Explorer</h1>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <a href="/export-ledger" class="secondary-button">Export Ledger CSV</a>
+        <a href="/export-candidates" class="secondary-button">Export Candidates CSV</a>
+      </div>
+    </div>
+
+    <div class="stats-row" id="stats-row">
+      <span class="stat-badge">Loading ledger...</span>
+    </div>
+
+    <div class="tab-row">
+      <button type="button" class="tab-btn active" id="tab-runs">Synthesis Runs</button>
+      <button type="button" class="tab-btn" id="tab-cands">Candidate Nouns</button>
+    </div>
+
+    <input type="text" id="search-box" class="search-input" placeholder="Search by noun, domain, or synthesis text..." />
+
+    <div id="runs-panel">
+      <div class="op-chips" id="op-chips"></div>
+      <div id="runs-list"></div>
+    </div>
+
+    <div id="cands-panel" style="display:none;">
+      <table class="cand-table">
+        <thead>
+          <tr><th>New Noun</th><th>Assigned Domain</th><th>Seen</th><th>First Seen</th></tr>
+        </thead>
+        <tbody id="cands-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <button class="back-button" onclick="window.location.href='/home'">← Back to Synthesis</button>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      let allRuns = [];
+      let allCands = [];
+      let activeOp = 'ALL';
+      let activeTab = 'runs';
+
+      const searchBox = document.getElementById('search-box');
+      const runsList = document.getElementById('runs-list');
+      const candsBody = document.getElementById('cands-body');
+      const opChips = document.getElementById('op-chips');
+
+      function esc(s) {
+        return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+
+      function renderRuns() {
+        const q = searchBox.value.trim().toLowerCase();
+        const filtered = allRuns.filter(r => {
+          if (activeOp !== 'ALL' && r.primary_operator !== activeOp) return false;
+          if (!q) return true;
+          const hay = [
+            r.noun_1, r.noun_2, r.noun_3,
+            r.primary_operator, r.secondary_operator,
+            ...(r.domains_1 || []), ...(r.domains_2 || []), ...(r.domains_3 || []),
+            r.tier_3
+          ].join(' ').toLowerCase();
+          return hay.includes(q);
+        });
+
+        if (!filtered.length) {
+          runsList.innerHTML = '<p style="color:#2c4a4a;font-style:italic;">No matching synthesis runs found.</p>';
+          return;
+        }
+
+        runsList.innerHTML = filtered.map(r => {
+          const qs = new URLSearchParams({ w1: r.noun_1, w2: r.noun_2, w3: r.noun_3 }).toString();
+          const dt = r.created_at ? new Date(r.created_at).toLocaleString() : '';
+          const opText = r.secondary_operator ? `${r.primary_operator} → ${r.secondary_operator}` : r.primary_operator;
+          const domains = [
+            `${r.noun_1}: ${(r.domains_1 || []).join(', ')}`,
+            `${r.noun_2}: ${(r.domains_2 || []).join(', ')}`,
+            `${r.noun_3}: ${(r.domains_3 || []).join(', ')}`
+          ].join(' • ');
+          return `
+            <div class="entry-card">
+              <div class="entry-top">
+                <span class="triad-words">${esc(r.noun_1)} • ${esc(r.noun_2)} • ${esc(r.noun_3)}</span>
+                <span class="op-pill">${esc(opText)}</span>
+              </div>
+              <div class="domain-line">${esc(domains)}</div>
+              <div class="synth-quote">${esc(r.tier_3)}</div>
+              <div class="entry-footer">
+                <span>#${r.id} • ${esc(dt)}</span>
+                <a href="/results?${qs}" class="secondary-button">Open Synthesis →</a>
+              </div>
+            </div>`;
+        }).join('');
+      }
+
+      function renderCands() {
+        const q = searchBox.value.trim().toLowerCase();
+        const filtered = allCands.filter(c => !q || c.noun.toLowerCase().includes(q) || c.assigned_domain.toLowerCase().includes(q));
+        if (!filtered.length) {
+          candsBody.innerHTML = '<tr><td colspan="4" style="font-style:italic;color:#2c4a4a;">No candidate nouns logged yet.</td></tr>';
+          return;
+        }
+        candsBody.innerHTML = filtered.map(c => `
+          <tr>
+            <td><strong>${esc(c.noun)}</strong></td>
+            <td>${esc(c.assigned_domain)}</td>
+            <td>${c.times_seen}</td>
+            <td>${c.first_seen ? esc(new Date(c.first_seen).toLocaleDateString()) : ''}</td>
+          </tr>`).join('');
+      }
+
+      document.getElementById('tab-runs').addEventListener('click', function() {
+        activeTab = 'runs';
+        this.classList.add('active');
+        document.getElementById('tab-cands').classList.remove('active');
+        document.getElementById('runs-panel').style.display = 'block';
+        document.getElementById('cands-panel').style.display = 'none';
+        renderRuns();
+      });
+
+      document.getElementById('tab-cands').addEventListener('click', function() {
+        activeTab = 'cands';
+        this.classList.add('active');
+        document.getElementById('tab-runs').classList.remove('active');
+        document.getElementById('runs-panel').style.display = 'none';
+        document.getElementById('cands-panel').style.display = 'block';
+        renderCands();
+      });
+
+      searchBox.addEventListener('input', () => {
+        if (activeTab === 'runs') renderRuns();
+        else renderCands();
+      });
+
+      try {
+        const res = await fetch('/api/ledger');
+        const data = await res.json();
+        allRuns = data.interactions || [];
+        allCands = data.candidates || [];
+
+        const ops = data.operator_counts || {};
+        const topOp = Object.entries(ops).sort((a, b) => b[1] - a[1])[0];
+        document.getElementById('stats-row').innerHTML = `
+          <span class="stat-badge">Total Syntheses: ${data.total_interactions || allRuns.length}</span>
+          <span class="stat-badge">Candidate Nouns: ${allCands.length}</span>
+          ${topOp ? `<span class="stat-badge">Top Operator: ${esc(topOp[0])} (${topOp[1]})</span>` : ''}
+        `;
+
+        const chipNames = ['ALL', 'FORGE', 'ERODE', 'BIND', 'COLLIDE', 'TRANSMIT', 'CONTAIN', 'METABOLIZE', 'ENDURE'];
+        opChips.innerHTML = chipNames.map(op => {
+          const cnt = op === 'ALL' ? allRuns.length : (ops[op] || 0);
+          return `<button type="button" class="op-chip ${op === 'ALL' ? 'active' : ''}" data-op="${op}">${op} (${cnt})</button>`;
+        }).join('');
+
+        opChips.querySelectorAll('.op-chip').forEach(btn => {
+          btn.addEventListener('click', function() {
+            opChips.querySelectorAll('.op-chip').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            activeOp = this.dataset.op;
+            renderRuns();
+          });
+        });
+
+        renderRuns();
+      } catch {
+        runsList.innerHTML = '<p style="color:#b00020;">Unable to load ledger records right now.</p>';
+      }
+    });
+  </script>
+</body>
+</html>
