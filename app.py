@@ -93,6 +93,27 @@ def process():
 
 # 6. IMAGE GENERATION ROUTE
 @app.route('/generate-image', methods=['POST'])
+def generate_image():
+    try:
+        data = request.get_json()
+        prompt = data.get('prompt', 'A cosmic visualization of clarity')
+        
+        response = openai.Image.create(
+            model="gpt-image-2",
+            prompt=f"A cinematic, high-detail metaphysical visualization of: {prompt}",
+            n=1,
+            size="1024x1024"
+        )
+        image_data = response['data'][0]
+        if 'url' in image_data and image_data['url']:
+            image_url = image_data['url']
+        else:
+            image_url = f"data:image/png;base64,{image_data['b64_json']}"
+        return jsonify({"image_url": image_url})
+    except Exception as e:
+        print(f"🔥 Image Error: {str(e)}", flush=True)
+        return jsonify({"error": str(e)}), 500
+
 # 6B. BLUESKY REPLY GENERATOR (LINK-FREE, <300 CHARS)
 @app.route('/bluesky-reply', methods=['POST'])
 def bluesky_reply():
@@ -134,27 +155,6 @@ def bluesky_reply():
 
     except Exception as e:
         print(f"🔥 Bluesky reply error: {str(e)}", flush=True)
-        return jsonify({"error": str(e)}), 500
-
-def generate_image():
-    try:
-        data = request.get_json()
-        prompt = data.get('prompt', 'A cosmic visualization of clarity')
-        
-        response = openai.Image.create(
-            model="gpt-image-2",
-            prompt=f"A cinematic, high-detail metaphysical visualization of: {prompt}",
-            n=1,
-            size="1024x1024"
-        )
-        image_data = response['data'][0]
-        if 'url' in image_data and image_data['url']:
-            image_url = image_data['url']
-        else:
-            image_url = f"data:image/png;base64,{image_data['b64_json']}"
-        return jsonify({"image_url": image_url})
-    except Exception as e:
-        print(f"🔥 Image Error: {str(e)}", flush=True)
         return jsonify({"error": str(e)}), 500
 
 # 7. LEDGER EXPORT ROUTES
