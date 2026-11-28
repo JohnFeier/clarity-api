@@ -153,14 +153,25 @@
           if (!response.ok) throw new Error('Server response was not ok');
 
           const data = await response.json();
-          
+
+          if (!data || !data.summary_3) {
+            throw new Error(data.error || "Empty synthesis returned from server.");
+          }
+
+          const payload = {
+            summary_1: data.summary_1 || "",
+            summary_2: data.summary_2 || "",
+            summary_3: data.summary_3 || "",
+            radiance: data.radiance || "",
+            radiance_lens: data.radiance_lens || "Mirror of Becoming",
+            primary_operator: (data.operators && data.operators.primary) || "FORGE"
+          };
+
           localStorage.clear();
-          localStorage.setItem("summary_1", data.summary_1 || "");
-          localStorage.setItem("summary_2", data.summary_2 || "");
-          localStorage.setItem("summary_3", data.summary_3 || "");
-          localStorage.setItem("radiance", data.radiance || "");
-          localStorage.setItem("radiance_lens", data.radiance_lens || "Mirror of Becoming");
-          localStorage.setItem("primary_operator", (data.operators && data.operators.primary) || "FORGE");
+          Object.entries(payload).forEach(([k, v]) => {
+            localStorage.setItem(k, v);
+            sessionStorage.setItem(k, v);
+          });
 
           window.location.href = "/results";
         } catch (error) {
