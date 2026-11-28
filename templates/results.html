@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <title>Context Finder — Synthesis Results</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <link href="[https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Montserrat:wght@600;700&family=Pacifico&display=swap](https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Montserrat:wght@600;700&family=Pacifico&display=swap)" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Montserrat:wght@600;700&family=Pacifico&display=swap" rel="stylesheet" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script async src="[https://www.googletagmanager.com/gtag/js?id=G-SHNFKJPC74](https://www.googletagmanager.com/gtag/js?id=G-SHNFKJPC74)"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-SHNFKJPC74"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-SHNFKJPC74');</script>
   <style>
     .stage-heading{display:block;font-size:.85rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#005f5f;margin:0 0 12px;padding-bottom:8px;border-bottom:1px solid rgba(0,128,128,.2)}
@@ -73,7 +73,7 @@
         <span id="bsky-char-count" class="char-count-ok">0 / 300 chars</span>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button type="button" id="bsky-copy-btn" class="secondary-button">Copy Reply</button>
-          <a id="bsky-intent-link" href="[https://bsky.app/intent/compose](https://bsky.app/intent/compose)" target="_blank" rel="noopener" class="secondary-button">Open in Bluesky</a>
+          <a id="bsky-intent-link" href="https://bsky.app/intent/compose" target="_blank" rel="noopener" class="secondary-button">Open in Bluesky</a>
         </div>
       </div>
     </div>
@@ -118,6 +118,12 @@
         { operator: "TRANSMUTE", lens: "Alchemical Crucible" },
         { operator: "ASCEND", lens: "Celestial Astrolabe" }
       ];
+
+      function makeBskyComposeUrl(text) {
+        const u = new URL("https://bsky.app/intent/compose");
+        u.searchParams.set("text", text || "");
+        return u.toString();
+      }
 
       const params = new URLSearchParams(window.location.search);
       const urlW1 = (params.get('w1') || '').trim();
@@ -258,7 +264,7 @@
         const t = bskyArea.value;
         bskyCount.textContent = `${t.length} / 300 chars`;
         bskyCount.className = t.length <= 300 ? 'char-count-ok' : 'char-count-over';
-        bskyLink.href = `[https://bsky.app/intent/compose?text=$](https://bsky.app/intent/compose?text=$){encodeURIComponent(t)}`;
+        bskyLink.href = makeBskyComposeUrl(t);
       };
       bskyArea.addEventListener('input', updateBsky);
 
@@ -315,7 +321,7 @@
             const card = document.createElement('div');
             card.className = 'thread-post-card';
             const openBtn = num === 1
-              ? `<a id="thread-intent-1" href="[https://bsky.app/intent/compose?text=$](https://bsky.app/intent/compose?text=$){encodeURIComponent(postText)}" target="_blank" rel="noopener" class="secondary-button">Start Thread in Bluesky</a>`
+              ? `<a id="thread-intent-1" href="#" target="_blank" rel="noopener" class="secondary-button">Start Thread in Bluesky</a>`
               : '';
             card.innerHTML = `
               <textarea class="bluesky-textarea" data-idx="${num}" maxlength="320"></textarea>
@@ -330,15 +336,15 @@
 
             const ta = card.querySelector('textarea');
             ta.value = postText;
+            const link1 = card.querySelector('#thread-intent-1');
+            if (link1) link1.href = makeBskyComposeUrl(postText);
+
             const cnt = card.querySelector(`#th-cnt-${num}`);
             ta.addEventListener('input', () => {
               const l = ta.value.length;
               cnt.textContent = `${l} / 300 chars`;
               cnt.className = l <= 300 ? 'char-count-ok' : 'char-count-over';
-              if (num === 1) {
-                const link1 = document.getElementById('thread-intent-1');
-                if (link1) link1.href = `[https://bsky.app/intent/compose?text=$](https://bsky.app/intent/compose?text=$){encodeURIComponent(ta.value)}`;
-              }
+              if (link1) link1.href = makeBskyComposeUrl(ta.value);
             });
             card.querySelector(`#th-cp-${num}`).addEventListener('click', async function() {
               await navigator.clipboard.writeText(ta.value);
