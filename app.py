@@ -95,12 +95,20 @@ def process():
 @app.route('/generate-image', methods=['POST'])
 def generate_image():
     try:
-        data = request.get_json()
-        prompt = data.get('prompt', 'A cosmic visualization of clarity')
+        data = request.get_json(force=True)
+        core_prompt = data.get('prompt', 'A cosmic visualization of clarity')
+        radiance_lens = data.get('radiance_lens', '')
+        primary_operator = data.get('primary_operator', '')
+
+        styled_prompt = build_radiance_image_prompt(
+            core_synthesis=core_prompt,
+            lens_name=radiance_lens,
+            primary_operator=primary_operator,
+        )
         
         response = openai.Image.create(
             model="gpt-image-2",
-            prompt=f"A cinematic, high-detail metaphysical visualization of: {prompt}",
+            prompt=styled_prompt,
             n=1,
             size="1024x1024"
         )
@@ -109,7 +117,10 @@ def generate_image():
             image_url = image_data['url']
         else:
             image_url = f"data:image/png;base64,{image_data['b64_json']}"
-        return jsonify({"image_url": image_url})
+        return jsonify({
+            "image_url": image_url,
+            "applied_lens": radiance_lens or primary_operator or "Mirror of Becoming"
+        })
     except Exception as e:
         print(f"🔥 Image Error: {str(e)}", flush=True)
         return jsonify({"error": str(e)}), 500
