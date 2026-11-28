@@ -1,220 +1,204 @@
 import openai
 import os
+from flask import Flask, request, jsonify, make_response, render_template, Response
+from flask_cors import CORS
+from dotenv import load_dotenv
 
-# Initialize API Key
+# 1. IMPORT YOUR ENGINES
+# Ensure these filenames match exactly: context_engine.py, radiant_clarity_engine.py, and taxonomy_engine.py
+from context_engine import run_clarity_funnel
+from radiant_clarity_engine import (
+    run_radiance_engine,
+    get_signature_for_operator,
+    build_radiance_image_prompt,
+)
+from taxonomy_engine import export_ledger_csv
+
+# 2. INITIALIZE APP & LOAD API KEY
+app = Flask(__name__, static_folder='static', template_folder='templates')
+load_dotenv()
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 
-# --- Radiant Signatures (Your Interpretive Lenses, mapped to the 8 Vertical Operators) ---
-RADIANT_SIGNATURES = [
-    {
-        "operator": "FORGE",
-        "name": "Mirror of Becoming",
-        "perspective": "Internal",
-        "time": "Present",
-        "agency": "Emergent",
-        "scale": "Meso",
-        "emotion": "Hope",
-        "modality": "Embodied",
-        "logic": "Analogical",
-        "visual_motif": "Luminous gestation, molten light crystallizing into new architecture",
-        "visual_style": (
-            "Luminous chiaroscuro oil painting blended with sacred glasswork; warm molten gold, "
-            "amber, and deep teal shadows; upward spiral composition where raw elements coalesce "
-            "into glowing crystalline structures; radiant volumetric light."
-        )
-    },
-    {
-        "operator": "ERODE",
-        "name": "Ecliptic Memory",
-        "perspective": "Meta",
-        "time": "Past",
-        "agency": "Passive",
-        "scale": "Macro",
-        "emotion": "Longing",
-        "modality": "Conceptual",
-        "logic": "Metaphorical",
-        "visual_motif": "Weathered stone, dissolving edges, twilight eclipse over receding forms",
-        "visual_style": (
-            "Atmospheric poetic realism with wind-eroded sandstone, drifting ash, and oxidized copper; "
-            "muted twilight indigo, slate grey, and pale silver eclipse halo; receding horizon lines "
-            "and dissolving silhouettes evoking impermanence."
-        )
-    },
-    {
-        "operator": "COLLIDE",
-        "name": "Catalyst Loop",
-        "perspective": "External",
-        "time": "Future",
-        "agency": "Active",
-        "scale": "Micro",
-        "emotion": "Excitement",
-        "modality": "Visual",
-        "logic": "Causal",
-        "visual_motif": "Intersecting shockwaves, kinetic sparks, split-hemisphere tension",
-        "visual_style": (
-            "High-contrast dramatic split-hemisphere composition with diagonal fault lines and kinetic shockwaves; "
-            "incandescent crimson-orange sparks colliding against electric cobalt shadow; sharp architectural "
-            "fracture geometry and dynamic motion."
-        )
-    },
-    {
-        "operator": "BIND",
-        "name": "Harmonic Lattice",
-        "perspective": "Relational",
-        "time": "Present",
-        "agency": "Co-creative",
-        "scale": "Meso",
-        "emotion": "Reverence",
-        "modality": "Structural",
-        "logic": "Topological",
-        "visual_motif": "Interlocking golden threads, symmetrical resonance, bridged constellations",
-        "visual_style": (
-            "Intricate Renaissance-meets-sacred-geometry tapestry; fine luminous golden filaments weaving "
-            "separate worlds into symmetrical balance; warm candlelight, emerald, and ivory palette; "
-            "harmonic bridges and cymatic resonance ripples."
-        )
-    },
-    {
-        "operator": "TRANSMIT",
-        "name": "Prism Current",
-        "perspective": "Systemic",
-        "time": "Future",
-        "agency": "Conductive",
-        "scale": "Macro",
-        "emotion": "Wonder",
-        "modality": "Acoustic-Luminous",
-        "logic": "Propagative",
-        "visual_motif": "Refracted spectral beams, concentric ripples carrying signal across horizons",
-        "visual_style": (
-            "Expansive panoramic futurist art; beams of light refracting through crystal prisms into "
-            "concentric acoustic and optical waves across vast landscapes; iridescent cyan, pearl white, "
-            "and solar gold; sense of effortless propagation."
-        )
-    },
-    {
-        "operator": "CONTAIN",
-        "name": "Obsidian Threshold",
-        "perspective": "Boundary",
-        "time": "Present",
-        "agency": "Restraining",
-        "scale": "Meso",
-        "emotion": "Stillness",
-        "modality": "Architectural",
-        "logic": "Deductive",
-        "visual_motif": "Sacred geometric vessels, gravitational horizons holding volatile energy in equilibrium",
-        "visual_style": (
-            "Monumental brutalist-neoclassical architecture carved from dark obsidian and brushed bronze; "
-            "concentric stone rings and taut geometric thresholds holding intense inner fire in solemn "
-            "equilibrium; deep charcoal, warm alabaster, and controlled ember glow."
-        )
-    },
-    {
-        "operator": "METABOLIZE",
-        "name": "Alchemical Crucible",
-        "perspective": "Organic",
-        "time": "Transitional",
-        "agency": "Adaptive",
-        "scale": "Micro-to-Macro",
-        "emotion": "Renewal",
-        "modality": "Living-System",
-        "logic": "Dialectical",
-        "visual_motif": "Bioluminescent root networks, transmuting shadow and decay into living growth",
-        "visual_style": (
-            "Surrealist botanical alchemy; intricate bioluminescent root and mycelial networks transforming "
-            "dark volcanic soil and decayed ruins into vibrant emerald moss and blooming light; "
-            "deep forest viridian, rich umber, and bioluminescent turquoise."
-        )
-    },
-    {
-        "operator": "ENDURE",
-        "name": "Celestial Astrolabe",
-        "perspective": "Cosmic",
-        "time": "Cyclical",
-        "agency": "Steadfast",
-        "scale": "Macro",
-        "emotion": "Serenity",
-        "modality": "Archetypal",
-        "logic": "Recursive",
-        "visual_motif": "Concentric brass orbital rings, ancient monoliths enduring across turning eras",
-        "visual_style": (
-            "Timeless celestial engraving meets hyper-detailed cosmic realism; weathered granite monoliths "
-            "framed by giant rotating brass astrolabe rings and star trails; deep midnight ultramarine, "
-            "burnished bronze, and starlight silver; serene cyclical permanence."
-        )
-    }
-]
+# 3. SECURITY (CORS)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
-OPERATOR_LENS_MAP = {sig["operator"]: sig for sig in RADIANT_SIGNATURES}
-NAME_LENS_MAP = {sig["name"].lower(): sig for sig in RADIANT_SIGNATURES}
+@app.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type,Authorization"
+    response.headers["Access-Control-Allow-Methods"] = "GET,PUT,POST,DELETE,OPTIONS"
+    return response
 
+print("🚀 Flask app starting with Logic Funnel engine...", flush=True)
 
-def get_signature_for_operator(primary_operator):
-    """Selects the matching Radiant Signature for a given vertical operator, defaulting to Mirror of Becoming."""
-    if not primary_operator:
-        return RADIANT_SIGNATURES[0]
-    return OPERATOR_LENS_MAP.get(primary_operator.strip().upper(), RADIANT_SIGNATURES[0])
+# 4. PAGE ROUTES
+@app.route("/")
+def index():
+    return render_template("index.html")
 
+@app.route("/home")
+def home():
+    return render_template("home.html")
 
-def get_signature_by_name_or_operator(lens_name="", primary_operator=""):
-    """Resolves a Radiant Signature from either its lens name or its vertical operator."""
-    if lens_name and lens_name.strip().lower() in NAME_LENS_MAP:
-        return NAME_LENS_MAP[lens_name.strip().lower()]
-    return get_signature_for_operator(primary_operator)
+@app.route("/results")
+def results():
+    return render_template("results.html")
 
-
-def build_radiance_image_prompt(core_synthesis, lens_name="", primary_operator=""):
-    """Constructs an operator-tailored visual art direction prompt for /generate-image."""
-    sig = get_signature_by_name_or_operator(lens_name=lens_name, primary_operator=primary_operator)
-    return (
-        f"Visual Lens: {sig['name']} ({sig['operator']} Force Vector). "
-        f"Artistic Direction & Palette: {sig['visual_style']} "
-        f"Symbolic Motif: {sig['visual_motif']}. "
-        f"Conceptual Scene to Depict: {core_synthesis} "
-        f"Ultra-detailed, museum-grade symbolic artwork, rich atmospheric depth, zero cluttered labels or gibberish text."
-    )
-
-
-def run_radiance_engine(noun1, noun2, noun3, signature, secondary_operator=""):
-    """
-    Synthesizes three concepts into a poetic insight using the operator-matched Radiance signature.
-    """
-    secondary_note = (
-        f"- Secondary Undercurrent: {secondary_operator} (subtle counter-force in the background)\n"
-        if secondary_operator else ""
-    )
-
-    prompt = f"""
-    Interpret the relationship between the concepts **{noun1}**, **{noun2}**, and **{noun3}** 
-    using the following interpretive lens:
-
-- Signature: {signature['name']} (Force Vector: {signature.get('operator', 'FORGE')})
-{secondary_note}- Perspective: {signature['perspective']}
-- Time Orientation: {signature['time']}
-- Agency: {signature['agency']}
-- Scale: {signature['scale']}
-- Emotional Tone: {signature['emotion']}
-- Reasoning Style: {signature['logic']}
-- Visual Motif: {signature.get('visual_motif', '')}
-
-    Speak poetically, metaphorically, or archetypally. Structure your output in three short parts:
-1. A one-line metaphor.
-2. An expanded reflection.
-3. A philosophical implication.
-    """
+# 5. THE MAIN PROCESS ROUTE
+@app.route('/process', methods=['POST', 'OPTIONS'])
+def process():
+    if request.method == 'OPTIONS':
+        response = make_response()
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        return response, 200
 
     try:
+        data = request.get_json(force=True)
+        variables = data.get('variables', [])
+        
+        if not variables or len(variables) < 3:
+            return jsonify({"error": "Three words are required."}), 400
+
+        # --- STEP 1: Run the Logic Funnel (from context_engine.py) ---
+        funnel_results = run_clarity_funnel(variables)
+
+        # --- STEP 2: Format strings for the Frontend ---
+        t1_combined = f"Intersections: {funnel_results['tier_1']['ab']} | {funnel_results['tier_1']['bc']} | {funnel_results['tier_1']['ac']}"
+        t2_combined = f"Syntheses: {funnel_results['tier_2']['abbc']} and {funnel_results['tier_2']['bcac']}"
+        proto_idea = funnel_results.get("tier_3", "Synthesis incomplete.")
+
+        # --- STEP 3: Run the Radiance Engine using the Operator-Matched Lens ---
+        noun1, noun2, noun3 = [v.strip() for v in variables[:3]]
+        operators = funnel_results.get("operators", {})
+        primary_op = operators.get("primary", "FORGE")
+        secondary_op = operators.get("secondary", "")
+        selected_signature = get_signature_for_operator(primary_op)
+
+        radiance_output = run_radiance_engine(
+            noun1, noun2, noun3, selected_signature, secondary_operator=secondary_op
+        )
+
+        # --- STEP 4: SEND TO FRONTEND ---
+        return jsonify({
+            "summary_1": t1_combined,
+            "summary_2": t2_combined,
+            "summary_3": proto_idea,
+            "radiance": radiance_output,
+            "radiance_lens": selected_signature["name"],
+            "funnel_mode": funnel_results.get("funnel_mode", "triangulation"),
+            "operators": operators
+        }), 200
+
+    except Exception as e:
+        print(f"🔥 Error occurred: {str(e)}", flush=True)
+        return jsonify({"error": str(e)}), 500
+
+# 6. IMAGE GENERATION ROUTE
+@app.route('/generate-image', methods=['POST'])
+def generate_image():
+    try:
+        data = request.get_json(force=True)
+        core_prompt = data.get('prompt', 'A cosmic visualization of clarity')
+        radiance_lens = data.get('radiance_lens', '')
+        primary_operator = data.get('primary_operator', '')
+
+        styled_prompt = build_radiance_image_prompt(
+            core_synthesis=core_prompt,
+            lens_name=radiance_lens,
+            primary_operator=primary_operator,
+        )
+        
+        response = openai.Image.create(
+            model="gpt-image-2",
+            prompt=styled_prompt,
+            n=1,
+            size="1024x1024"
+        )
+        image_data = response['data'][0]
+        if 'url' in image_data and image_data['url']:
+            image_url = image_data['url']
+        else:
+            image_url = f"data:image/png;base64,{image_data['b64_json']}"
+        return jsonify({
+            "image_url": image_url,
+            "applied_lens": radiance_lens or primary_operator or "Mirror of Becoming"
+        })
+    except Exception as e:
+        print(f"🔥 Image Error: {str(e)}", flush=True)
+        return jsonify({"error": str(e)}), 500
+
+# 6B. BLUESKY REPLY GENERATOR (LINK-FREE, <300 CHARS)
+@app.route('/bluesky-reply', methods=['POST'])
+def bluesky_reply():
+    try:
+        data = request.get_json(force=True)
+        tier_3 = (data.get('tier_3') or '').strip()
+        if not tier_3 or tier_3 == "No result found.":
+            return jsonify({"error": "No synthesis available to distill."}), 400
+
+        prompt = (
+            f"Core Synthesis:\n{tier_3}\n\n"
+            "Rewrite this synthesis as a single, insightful, conversational reply for Bluesky.\n"
+            "Strict rules:\n"
+            "- Maximum 260 characters total (must stay strictly under 300 characters).\n"
+            "- NO URLs, NO links, NO hashtags, NO emojis, and NO mention of Context Finder.\n"
+            "- Sound like a thoughtful human observer offering a crisp reframing—not an AI summary.\n"
+            "- Output ONLY the reply text."
+        )
+
         response = openai.ChatCompletion.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are a poetic philosopher and master of metaphor."},
+                {"role": "system", "content": "You write crisp, incisive micro-insights under 260 characters with zero links or hashtags."},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.85,
-            max_tokens=350
+            temperature=0.75,
+            max_tokens=100
         )
-        
-        return response.choices[0].message.content.strip()
+
+        reply_text = response.choices[0].message["content"].strip().strip('"')
+        if len(reply_text) > 295:
+            reply_text = reply_text[:292].rsplit(" ", 1)[0] + "..."
+
+        return jsonify({
+            "reply": reply_text,
+            "char_count": len(reply_text)
+        }), 200
 
     except Exception as e:
-        print(f"🔥 Error in Radiance Engine: {str(e)}")
-        return "The radiance is currently clouded. Please try again."
+        print(f"🔥 Bluesky reply error: {str(e)}", flush=True)
+        return jsonify({"error": str(e)}), 500
+
+# 7. LEDGER EXPORT ROUTES
+@app.route('/export-ledger', methods=['GET'])
+def export_ledger():
+    try:
+        csv_data = export_ledger_csv(table="interactions")
+        return Response(
+            csv_data,
+            mimetype="text/csv",
+            headers={"Content-Disposition": "attachment; filename=context_finder_ledger.csv"}
+        )
+    except Exception as e:
+        print(f"🔥 Ledger export error: {str(e)}", flush=True)
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/export-candidates', methods=['GET'])
+def export_candidates():
+    try:
+        csv_data = export_ledger_csv(table="candidates")
+        return Response(
+            csv_data,
+            mimetype="text/csv",
+            headers={"Content-Disposition": "attachment; filename=context_finder_candidates.csv"}
+        )
+    except Exception as e:
+        print(f"🔥 Candidate export error: {str(e)}", flush=True)
+        return jsonify({"error": str(e)}), 500
+
+# 8. START THE SERVER
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
