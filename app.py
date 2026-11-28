@@ -93,6 +93,49 @@ def process():
 
 # 6. IMAGE GENERATION ROUTE
 @app.route('/generate-image', methods=['POST'])
+# 6B. BLUESKY REPLY GENERATOR (LINK-FREE, <300 CHARS)
+@app.route('/bluesky-reply', methods=['POST'])
+def bluesky_reply():
+    try:
+        data = request.get_json(force=True)
+        tier_3 = (data.get('tier_3') or '').strip()
+        if not tier_3 or tier_3 == "No result found.":
+            return jsonify({"error": "No synthesis available to distill."}), 400
+
+        prompt = (
+            f"Core Synthesis:\n{tier_3}\n\n"
+            "Rewrite this synthesis as a single, insightful, conversational reply for Bluesky.\n"
+            "Strict rules:\n"
+            "- Maximum 260 characters total (must stay strictly under 300 characters).\n"
+            "- NO URLs, NO links, NO hashtags, NO emojis, and NO mention of Context Finder.\n"
+            "- Sound like a thoughtful human observer offering a crisp reframing—not an AI summary.\n"
+            "- Output ONLY the reply text."
+        )
+
+        response = openai.ChatCompletion.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You write crisp, incisive micro-insights under 260 characters with zero links or hashtags."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.75,
+            max_tokens=100
+        )
+
+        reply_text = response.choices[0].message["content"].strip().strip('"')
+        # Hard safety cap under 300 characters
+        if len(reply_text) > 295:
+            reply_text = reply_text[:292].rsplit(" ", 1)[0] + "..."
+
+        return jsonify({
+            "reply": reply_text,
+            "char_count": len(reply_text)
+        }), 200
+
+    except Exception as e:
+        print(f"🔥 Bluesky reply error: {str(e)}", flush=True)
+        return jsonify({"error": str(e)}), 500
+
 def generate_image():
     try:
         data = request.get_json()
