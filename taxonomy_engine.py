@@ -265,6 +265,76 @@ def log_interaction(
         print(f"[Taxonomy] Interaction log warning: {e}")
 
 
+def get_ledger_data(limit=250):
+    """Returns recent interactions, candidate nouns, and summary stats for the /ledger UI."""
+    init_db()
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    try:
+        rows = conn.execute("""
+            SELECT
+                id, created_at, funnel_mode,
+                noun_1, noun_2, noun_3,
+                domains_1, domains_2, domains_3,
+                primary_operator, secondary_operator,
+                tier_1, tier_2, tier_3
+            FROM interactions
+            ORDER BY id DESC
+            LIMIT ?
+        """, (limit,)).fetchall()
+
+        interactions = []
+        operator_counts = defaultdict(int)
+        for r in rows:
+            d1 = json.loads(r["domains_1"]) if r["domains_1"] else []
+            d2 = json.loads(r["domains_2"]) if r["domains_2"] else []
+            d3 = json.loads(r["domains_3"]) if r["domains_3"] else []
+            op = (r["primary_operator"] or "FORGE").upper()
+            operator_counts[op] += 1
+            interactions.append({
+                "id": r["id"],
+                "created_at": r["created_at"],
+                "funnel_mode": r["funnel_mode"] or "triangulation",
+                "noun_1": r["noun_1"],
+                "noun_2": r["noun_2"],
+                "noun_3": r["noun_3"],
+                "domains_1": d1,
+                "domains_2": d2,
+                "domains_3": d3,
+                "primary_operator": op,
+                "secondary_operator": (r["secondary_operator"] or "").upper(),
+                "tier_1": r["tier_1"] or "",
+                "tier_2": r["tier_2"] or "",
+                "tier_3": r["tier_3"] or ""
+            })
+
+        cand_rows = conn.execute("""
+            SELECT noun, assigned_domain, times_seen, first_seen
+            FROM candidate_nouns
+            ORDER BY times_seen DESC, first_seen DESC
+            LIMIT ?
+        """, (limit,)).fetchall()
+        candidates = [
+            {
+                "noun": c["noun"],
+                "assigned_domain": c["assigned_domain"],
+                "times_seen": c["times_seen"],
+                "first_seen": c["first_seen"]
+            }
+            for c in cand_rows
+        ]
+
+        total_count = conn.execute("SELECT COUNT(*) FROM interactions").fetchone()[0]
+        return {
+            "total_interactions": total_count,
+            "operator_counts": dict(operator_counts),
+            "interactions": interactions,
+            "candidates": candidates
+        }
+    finally:
+        conn.close()
+
+
 def export_ledger_csv(table="interactions"):
     """Exports the SQLite interactions ledger or candidate_nouns table as a clean CSV string."""
     init_db()
