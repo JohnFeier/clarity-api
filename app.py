@@ -1,5 +1,6 @@
 import openai
 import os
+import json
 import requests
 from io import BytesIO
 from flask import Flask, request, jsonify, make_response, render_template, Response, send_file
@@ -187,6 +188,64 @@ def bluesky_reply():
 
     except Exception as e:
         print(f"🔥 Bluesky reply error: {str(e)}", flush=True)
+        return jsonify({"error": str(e)}), 500
+
+# 6C. BLUESKY 3-POST THREAD BUILDER
+@app.route('/bluesky-thread', methods=['POST'])
+def bluesky_thread():
+    try:
+        data = request.get_json(force=True)
+        tier_1 = (data.get('tier_1') or '').strip()
+        tier_2 = (data.get('tier_2') or '').strip()
+        tier_3 = (data.get('tier_3') or '').strip()
+        if not tier_3 or tier_3 == "No result found.":
+            return jsonify({"error": "No synthesis available to build thread."}), 400
+
+        prompt = (
+            f"Tier 1 (Pairwise Intersections):\n{tier_1}\n\n"
+            f"Tier 2 (Converging Tension):\n{tier_2}\n\n"
+            f"Tier 3 (Core Synthesis):\n{tier_3}\n\n"
+            "Distill this three-stage synthesis into a cohesive 3-post Bluesky thread.\n"
+            "Strict rules:\n"
+            "- Return ONLY valid JSON with a single key \"posts\" containing an array of 3 strings.\n"
+            "- Post 1 ends with ' 1/3' (frames the initial pairwise insight).\n"
+            "- Post 2 ends with ' 2/3' (develops the deeper tension).\n"
+            "- Post 3 ends with ' 3/3' (delivers the core synthesis resolution).\n"
+            "- Every single post MUST be strictly under 275 characters INCLUDING the ' 1/3' tag.\n"
+            "- NO URLs, NO hashtags, NO emojis, and NO mention of Context Finder.\n"
+            "- Sound like a thoughtful human essayist—crisp, conversational, and insightful."
+        )
+
+        response = openai.ChatCompletion.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You write tightly structured 3-post micro-essays in strict JSON format."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.72,
+            max_tokens=320
+        )
+
+        raw = response.choices[0].message["content"].strip()
+        if raw.startswith("```"):
+            raw = raw.strip("`").replace("json\n", "", 1).strip()
+        parsed = json.loads(raw)
+        posts = parsed.get("posts", [])[:3]
+
+        cleaned = []
+        for idx, p in enumerate(posts, start=1):
+            txt = str(p).strip().strip('"')
+            tag = f" {idx}/3"
+            if not txt.endswith(f"{idx}/3"):
+                txt = f"{txt}{tag}"
+            if len(txt) > 295:
+                txt = txt[:286].rsplit(" ", 1)[0] + "..." + tag
+            cleaned.append(txt)
+
+        return jsonify({"posts": cleaned}), 200
+
+    except Exception as e:
+        print(f"🔥 Bluesky thread error: {str(e)}", flush=True)
         return jsonify({"error": str(e)}), 500
 
 # 7. LEDGER EXPORT ROUTES
