@@ -55,6 +55,56 @@
       background-color: rgba(0, 128, 128, 0.1);
     }
 
+    .secondary-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .bluesky-box {
+      display: none;
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 8px;
+      background-color: rgba(0, 128, 128, 0.06);
+      border: 1px solid rgba(0, 128, 128, 0.25);
+    }
+
+    .bluesky-textarea {
+      width: 100%;
+      box-sizing: border-box;
+      min-height: 82px;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(0, 95, 95, 0.35);
+      font-family: inherit;
+      font-size: 0.95rem;
+      line-height: 1.45;
+      color: #163030;
+      background-color: #ffffff;
+      resize: vertical;
+    }
+
+    .bluesky-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: #005f5f;
+    }
+
+    .char-count-ok {
+      font-weight: 600;
+      color: #005f5f;
+    }
+
+    .char-count-over {
+      font-weight: 700;
+      color: #b00020;
+    }
+
     .radiance-subtext {
       font-size: 0.92rem;
       color: #2c4a4a;
@@ -92,6 +142,20 @@
     <div class="tier-content tier-three-highlight" id="tier3"></div>
     <div class="action-row">
       <button type="button" id="copy-btn" class="secondary-button">Copy All Tiers</button>
+      <button type="button" id="bsky-draft-btn" class="secondary-button">Draft Bluesky Reply (&lt;300 chars)</button>
+    </div>
+
+    <div id="bluesky-box" class="bluesky-box">
+      <textarea id="bluesky-textarea" class="bluesky-textarea" maxlength="320" placeholder="Generating link-free Bluesky reply..."></textarea>
+      <div class="bluesky-meta">
+        <span id="bsky-char-count" class="char-count-ok">0 / 300 chars</span>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button type="button" id="bsky-copy-btn" class="secondary-button">Copy Reply</button>
+          <a id="bsky-intent-link" href="https://bsky.app/intent/compose" target="_blank" rel="noopener" class="secondary-button" style="text-decoration: none; display: inline-block;">
+            Open in Bluesky
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -126,12 +190,14 @@
       const radianceBtn = document.getElementById("radiance-btn");
       const loadingDiv = document.getElementById("image-loading");
       const container = document.getElementById("image-container");
+      const bskyDraftBtn = document.getElementById("bsky-draft-btn");
 
-      // Prevent accidental image generation if visited without synthesis results
+      // Prevent accidental generation if visited without synthesis results
       if (tier3 === "No result found.") {
         radianceBtn.disabled = true;
         radianceBtn.style.opacity = "0.5";
         radianceBtn.style.cursor = "not-allowed";
+        bskyDraftBtn.disabled = true;
       }
 
       // One-click copy for writers saving notes
@@ -144,6 +210,63 @@
           setTimeout(() => { copyBtn.textContent = "Copy All Tiers"; }, 2000);
         } catch (err) {
           copyBtn.textContent = "Copy failed";
+        }
+      });
+
+      // Bluesky Reply Generator (<300 chars, link-free)
+      const bskyBox = document.getElementById("bluesky-box");
+      const bskyTextarea = document.getElementById("bluesky-textarea");
+      const bskyCharCount = document.getElementById("bsky-char-count");
+      const bskyCopyBtn = document.getElementById("bsky-copy-btn");
+      const bskyIntentLink = document.getElementById("bsky-intent-link");
+
+      function updateBskyMeta() {
+        const text = bskyTextarea.value;
+        const len = text.length;
+        bskyCharCount.textContent = `${len} / 300 chars`;
+        bskyCharCount.className = len <= 300 ? "char-count-ok" : "char-count-over";
+        bskyIntentLink.href = `https://bsky.app/intent/compose?text=${encodeURIComponent(text)}`;
+      }
+
+      bskyTextarea.addEventListener("input", updateBskyMeta);
+
+      bskyDraftBtn.addEventListener("click", async () => {
+        bskyDraftBtn.disabled = true;
+        bskyDraftBtn.textContent = "Distilling Reply...";
+        bskyBox.style.display = "block";
+        bskyTextarea.value = "Distilling a link-free Bluesky reply...";
+        updateBskyMeta();
+
+        try {
+          const response = await fetch("/bluesky-reply", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ tier_3: tier3 })
+          });
+
+          if (!response.ok) throw new Error("Failed to generate Bluesky reply");
+
+          const data = await response.json();
+          bskyTextarea.value = data.reply || tier3;
+          updateBskyMeta();
+          bskyDraftBtn.textContent = "Regenerate Reply";
+        } catch (error) {
+          console.error("Bluesky draft error:", error);
+          bskyTextarea.value = tier3.length <= 295 ? tier3 : tier3.slice(0, 292) + "...";
+          updateBskyMeta();
+          bskyDraftBtn.textContent = "Draft Bluesky Reply (<300 chars)";
+        } finally {
+          bskyDraftBtn.disabled = false;
+        }
+      });
+
+      bskyCopyBtn.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(bskyTextarea.value);
+          bskyCopyBtn.textContent = "Copied!";
+          setTimeout(() => { bskyCopyBtn.textContent = "Copy Reply"; }, 2000);
+        } catch (err) {
+          bskyCopyBtn.textContent = "Copy failed";
         }
       });
 
