@@ -1,6 +1,8 @@
 import openai
 import os
-from flask import Flask, request, jsonify, make_response, render_template, Response
+import requests
+from io import BytesIO
+from flask import Flask, request, jsonify, make_response, render_template, Response, send_file
 from flask_cors import CORS
 from dotenv import load_dotenv
 
@@ -137,7 +139,6 @@ def proxy_image():
     try:
         resp = requests.get(target_url, timeout=20)
         resp.raise_for_status()
-        from io import BytesIO
         return send_file(
             BytesIO(resp.content),
             mimetype=resp.headers.get('Content-Type', 'image/png')
