@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>Context Finder — Synthesis Results</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Montserrat:wght@400;600;700&family=Pacifico&display=swap" rel="stylesheet" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-SHNFKJPC74"></script>
@@ -58,6 +58,21 @@
     .secondary-button:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+    }
+
+    .primary-accent-button {
+      background-color: #005f5f;
+      color: #ffdead;
+      border: 1.5px solid #005f5f;
+      padding: 0.55rem 1rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .primary-accent-button:hover {
+      background-color: #004949;
     }
 
     .bluesky-box {
@@ -156,6 +171,14 @@
       font-family: inherit;
       font-size: 0.9rem;
       cursor: pointer;
+    }
+
+    .image-actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
+      flex-wrap: wrap;
     }
 
     .pulse-loading {
@@ -276,12 +299,12 @@
 
       function updateLensDisplay() {
         if (lensBadge) {
-          lensBadge.textContent = `${selectedOperator} • ${selectedLens}`;
+          lensBadge.textContent = `${selectedOperator} •${selectedLens}`;
         }
       }
 
       if (lensInline) {
-        lensInline.textContent = `${autoOperator} → ${autoLens}`;
+        lensInline.textContent = `${autoOperator} →${autoLens}`;
       }
 
       if (lensSelector) {
@@ -289,7 +312,7 @@
         if (!hasAutoInCatalog) {
           const customOpt = document.createElement("option");
           customOpt.value = JSON.stringify({ operator: autoOperator, lens: autoLens });
-          customOpt.textContent = `${autoOperator} — ${autoLens} (Auto-Matched)`;
+          customOpt.textContent = `${autoOperator} —${autoLens} (Auto-Matched)`;
           lensSelector.appendChild(customOpt);
         }
 
@@ -298,8 +321,8 @@
           opt.value = JSON.stringify(item);
           const isAuto = item.lens === autoLens;
           opt.textContent = isAuto
-            ? `${item.operator} — ${item.lens} (Auto-Matched)`
-            : `${item.operator} — ${item.lens}`;
+            ? `${item.operator} —${item.lens} (Auto-Matched)`
+            : `${item.operator} —${item.lens}`;
           if (isAuto) opt.selected = true;
           lensSelector.appendChild(opt);
         });
@@ -372,9 +395,7 @@
       function updateBskyMeta() {
         const text = bskyTextarea.value;
         const len = text.length;
-        bskyCharCount.textContent = `${len} / 300 chars`;
-        bskyCharCount.className = len <= 300 ? "char-count-ok" : "char-count-over";
-        bskyIntentLink.href = `https://bsky.app/intent/compose?text=${encodeURIComponent(text)}`;
+        bskyCharCount.textContent = `${len} / 300 chars`; bskyCharCount.className = len <= 300 ? "char-count-ok" : "char-count-over"; bskyIntentLink.href = `https://bsky.app/intent/compose?text=${encodeURIComponent(text)}`;
       }
 
       bskyTextarea.addEventListener("input", updateBskyMeta);
@@ -419,11 +440,43 @@
         }
       });
 
+      function wrapCanvasText(ctx, text, maxWidth) {
+        const words = text.split(/\s+/);
+        const lines = [];
+        let currentLine = "";
+
+        for (let i = 0; i < words.length; i++) {
+          const testLine = currentLine ? `${currentLine}${words[i]}` : words[i];
+          if (ctx.measureText(testLine).width <= maxWidth) {
+            currentLine = testLine;
+          } else {
+            if (currentLine) lines.push(currentLine);
+            currentLine = words[i];
+          }
+        }
+        if (currentLine) lines.push(currentLine);
+        return lines;
+      }
+
+      async function downloadBlueskySocialCard(imgSrc, synthesisText, operatorLabel, lensLabel) {
+        const safeSrc = imgSrc.startsWith("data:")
+          ? imgSrc
+          : `/proxy-image?url=${encodeURIComponent(imgSrc)}`;  const img = new Image(); img.crossOrigin = "anonymous";  await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = () => reject(new Error("Could not load image onto canvas")); img.src = safeSrc; });  const canvas = document.createElement("canvas"); const W = 1080; const H = 1350; canvas.width = W; canvas.height = H; const ctx = canvas.getContext("2d");  // Top 1080x1080 artwork ctx.drawImage(img, 0, 0, W, 1080);  // Bottom 1080x270 dark-teal editorial plate ctx.fillStyle = "#004d4d"; ctx.fillRect(0, 1080, W, 270);  // Subtle gold divider rule ctx.fillStyle = "#d4af37"; ctx.fillRect(0, 1080, W, 4);  // Eyebrow badge: OPERATOR • LENS ctx.fillStyle = "#d4af37"; ctx.font = "700 20px Montserrat, sans-serif"; ctx.textBaseline = "top"; ctx.fillText(`${operatorLabel.toUpperCase()}  •  ${lensLabel.toUpperCase()}`, 54, 1106);  // Tier 3 Synthesis text (auto-scales between 29px and 24px for long sentences) const maxWidth = W - 108; let fontSize = 29; ctx.font = `600 ${fontSize}px "Cormorant Garamond", Georgia, serif`;
+        let lines = wrapCanvasText(ctx, `“${synthesisText}”`, maxWidth);  if (lines.length > 4) { fontSize = 24; ctx.font = `600 ${fontSize}px "Cormorant Garamond", Georgia, serif`;
+          lines = wrapCanvasText(ctx, `“${synthesisText}”`, maxWidth).slice(0, 5); }  ctx.fillStyle = "#ffdead"; const lineHeight = Math.round(fontSize * 1.28); lines.forEach((line, idx) => { ctx.fillText(line, 54, 1144 + idx * lineHeight); });  // Subtle footer signature ctx.fillStyle = "rgba(255, 222, 173, 0.72)"; ctx.font = "600 18px Montserrat, sans-serif"; ctx.textAlign = "right"; ctx.fillText("CONTEXT FINDER  •  CLARITY & RADIANCE", W - 54, 1312); ctx.textAlign = "left";  // Export as high-quality JPEG (~350-500 KB, well under Bluesky's 2 MB limit) const dataUrl = canvas.toDataURL("image/jpeg", 0.92); const link = document.createElement("a"); const slug = lensLabel.toLowerCase().replace(/[^a-z0-9]+/g, "-"); link.download = `context-finder-${slug}.jpg`;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+
       radianceBtn.addEventListener("click", async () => {
         const prompt = tier3;
+        const activeLensAtPaint = selectedLens;
+        const activeOpAtPaint = selectedOperator;
 
         radianceBtn.disabled = true;
-        radianceBtn.textContent = `Painting via ${selectedLens}...`;
+        radianceBtn.textContent = `Painting via ${activeLensAtPaint}...`;
         loadingDiv.style.display = "block";
         container.innerHTML = "";
 
@@ -433,8 +486,8 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               prompt,
-              radiance_lens: selectedLens,
-              primary_operator: selectedOperator
+              radiance_lens: activeLensAtPaint,
+              primary_operator: activeOpAtPaint
             })
           });
 
@@ -444,24 +497,8 @@
           const imageUrl = data.image_url;
 
           container.innerHTML = `
-            <img src="${imageUrl}" alt="Radiance Visual Synthesis (${selectedLens})" 
+            <img src="${imageUrl}" alt="Radiance Visual Synthesis (${activeLensAtPaint})" 
                  style="max-width:100%; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);" />
-            <div style="margin-top: 12px;">
-              <a href="${imageUrl}" download="context-finder-radiance.png" target="_blank" rel="noopener" class="secondary-button" style="text-decoration: none; display: inline-block;">
-                Open / Save Image
-              </a>
-            </div>
-          `;
-        } catch (error) {
-          console.error("Error generating image:", error);
-          container.textContent = "Unable to visualize at this moment. Please try again.";
-        } finally {
-          radianceBtn.disabled = false;
-          radianceBtn.textContent = "Generate Radiance";
-          loadingDiv.style.display = "none";
-        }
-      });
-    });
-  </script>
-</body>
-</html>
+            <div class="image-actions">
+              <button type="button" id="download-social-card-btn" class="primary-accent-button">
+                Download Bluesky Card (4
