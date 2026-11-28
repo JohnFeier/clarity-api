@@ -11,8 +11,13 @@
   <style>
     .stage-heading{display:block;font-size:.85rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#005f5f;margin:0 0 12px;padding-bottom:8px;border-bottom:1px solid rgba(0,128,128,.2)}
     .tier-three-highlight{border-left:4px solid #008080;padding-left:14px;font-weight:500}
-    .action-row,.image-actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+    .action-row,.image-actions,.triad-bar-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .action-row,.image-actions{margin-top:16px}
     .image-actions{justify-content:center}
+    .triad-bar{display:none;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+    .triad-pills{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .triad-pill{background:rgba(0,128,128,.12);color:#004d4d;font-weight:700;font-size:.9rem;padding:4px 12px;border-radius:16px}
+    .sync-banner{display:none;text-align:center;font-style:italic;color:#005f5f;padding:14px}
     .secondary-button{background:transparent;color:#005f5f;border:1.5px solid #008080;padding:.55rem 1rem;font-size:.9rem;border-radius:6px;cursor:pointer;text-decoration:none;display:inline-block}
     .secondary-button:hover{background:rgba(0,128,128,.1)}
     .secondary-button:disabled{opacity:.5;cursor:not-allowed}
@@ -33,6 +38,16 @@
   </style>
 </head>
 <body class="inner-page-body">
+  <div id="sync-banner" class="results-card sync-banner">Synthesizing shared triad through Clarity &amp; Radiance...</div>
+
+  <div id="triad-card" class="results-card triad-bar">
+    <div class="triad-pills" id="triad-pills"></div>
+    <div class="triad-bar-actions">
+      <button type="button" id="share-url-btn" class="secondary-button" style="padding:.4rem .85rem;font-size:.85rem;">Copy Shareable Link</button>
+      <a id="tweak-nouns-link" href="/home" class="secondary-button" style="padding:.4rem .85rem;font-size:.85rem;">Tweak Nouns</a>
+    </div>
+  </div>
+
   <div class="results-card">
     <h2 class="stage-heading">Clarity • Tier 1 — Pairwise Intersections</h2>
     <div class="tier-content" id="tier1"></div>
@@ -82,7 +97,7 @@
   <button class="back-button" onclick="window.location.href='/home'">← New Synthesis</button>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       const LENSES = [
         { operator: "FORGE", lens: "Mirror of Becoming" },
         { operator: "ERODE", lens: "Ecliptic Memory" },
@@ -93,6 +108,71 @@
         { operator: "TRANSMUTE", lens: "Alchemical Crucible" },
         { operator: "ASCEND", lens: "Celestial Astrolabe" }
       ];
+
+      const params = new URLSearchParams(window.location.search);
+      const urlW1 = (params.get('w1') || '').trim();
+      const urlW2 = (params.get('w2') || '').trim();
+      const urlW3 = (params.get('w3') || '').trim();
+      const hasUrlTriad = Boolean(urlW1 && urlW2 && urlW3);
+
+      const storedW1 = (localStorage.getItem('w1') || '').trim();
+      const storedW2 = (localStorage.getItem('w2') || '').trim();
+      const storedW3 = (localStorage.getItem('w3') || '').trim();
+      const hasCachedSynthesis = Boolean(localStorage.getItem('summary_3') && localStorage.getItem('summary_3') !== 'No result found.');
+
+      const needsRemoteFetch = hasUrlTriad && (
+        !hasCachedSynthesis ||
+        urlW1.toLowerCase() !== storedW1.toLowerCase() ||
+        urlW2.toLowerCase() !== storedW2.toLowerCase() ||
+        urlW3.toLowerCase() !== storedW3.toLowerCase()
+      );
+
+      if (needsRemoteFetch) {
+        const banner = document.getElementById('sync-banner');
+        banner.style.display = 'block';
+        try {
+          const res = await fetch('/process', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ variables: [urlW1, urlW2, urlW3] })
+          });
+          if (!res.ok) throw new Error('Synthesis failed');
+          const data = await res.json();
+          const fresh = {
+            w1: urlW1, w2: urlW2, w3: urlW3,
+            summary_1: data.summary_1 || '',
+            summary_2: data.summary_2 || '',
+            summary_3: data.summary_3 || '',
+            radiance: data.radiance || '',
+            radiance_lens: data.radiance_lens || 'Mirror of Becoming',
+            primary_operator: (data.operators && data.operators.primary) || 'FORGE'
+          };
+          Object.entries(fresh).forEach(([k, v]) => localStorage.setItem(k, v));
+          banner.style.display = 'none';
+        } catch (err) {
+          banner.textContent = 'Unable to load shared triad. Please try again or start a new synthesis.';
+        }
+      }
+
+      const w1 = urlW1 || storedW1;
+      const w2 = urlW2 || storedW2;
+      const w3 = urlW3 || storedW3;
+
+      if (w1 && w2 && w3) {
+        const q = new URLSearchParams({ w1, w2, w3 }).toString();
+        if (!hasUrlTriad) {
+          window.history.replaceState(null, '', `/results?${q}`);
+        }
+        document.getElementById('triad-card').style.display = 'flex';
+        document.getElementById('triad-pills').innerHTML = [w1, w2, w3]
+          .map(w => `<span class="triad-pill">${w.replace(/</g, '&lt;')}</span>`).join('');
+        document.getElementById('tweak-nouns-link').href = `/home?${q}`;
+        document.getElementById('share-url-btn').addEventListener('click', async function() {
+          await navigator.clipboard.writeText(window.location.href);
+          this.textContent = 'Link Copied!';
+          setTimeout(() => this.textContent = 'Copy Shareable Link', 2000);
+        });
+      }
 
       const tier1 = localStorage.getItem("summary_1") || "No result found.";
       const tier2 = localStorage.getItem("summary_2") || "No result found.";
@@ -151,6 +231,9 @@
       if (tier3 === "No result found.") {
         radBtn.disabled = true;
         bskyDraftBtn.disabled = true;
+      } else {
+        radBtn.disabled = false;
+        bskyDraftBtn.disabled = false;
       }
 
       document.getElementById('copy-btn').addEventListener('click', async function() {
