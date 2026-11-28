@@ -108,7 +108,7 @@
     .radiance-subtext {
       font-size: 0.92rem;
       color: #2c4a4a;
-      margin: 0 0 14px 0;
+      margin: 0 0 12px 0;
     }
 
     .radiance-poetry-box {
@@ -130,6 +130,32 @@
       justify-content: flex-end;
       margin-top: 10px;
       font-style: normal;
+    }
+
+    .lens-control-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .lens-control-row label {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #005f5f;
+    }
+
+    .lens-select {
+      padding: 0.45rem 0.75rem;
+      border-radius: 6px;
+      border: 1.5px solid #008080;
+      background-color: #ffffff;
+      color: #163030;
+      font-family: inherit;
+      font-size: 0.9rem;
+      cursor: pointer;
     }
 
     .pulse-loading {
@@ -183,7 +209,7 @@
   <div class="results-card" style="text-align: center;">
     <h2 class="stage-heading" style="text-align: left;">
       Radiance • Poetic &amp; Visual Interpretation
-      <span id="active-lens-badge" title="Active conceptual force and matched Radiance aesthetic lens" style="float: right; font-size: 0.78rem; background: rgba(0,128,128,0.12); padding: 2px 8px; border-radius: 12px; cursor: help;"></span>
+      <span id="active-lens-badge" title="Active conceptual force and Radiance aesthetic lens" style="float: right; font-size: 0.78rem; background: rgba(0,128,128,0.12); padding: 2px 8px; border-radius: 12px; cursor: help;"></span>
     </h2>
 
     <div id="radiance-poetry-box" class="radiance-poetry-box">
@@ -195,7 +221,13 @@
       </div>
     </div>
 
-    <p class="radiance-subtext">Matched to this triad’s driving force (<strong id="lens-label-inline">Mirror of Becoming</strong>). Generate a visual scene below.</p>
+    <p class="radiance-subtext">Auto-matched to this triad’s driving force (<strong id="lens-label-inline">FORGE → Mirror of Becoming</strong>), or pick any aesthetic lens below:</p>
+
+    <div class="lens-control-row">
+      <label for="lens-selector">Visual Lens:</label>
+      <select id="lens-selector" class="lens-select"></select>
+    </div>
+
     <button id="radiance-btn" class="back-button" style="margin-top: 0; width: 100%;">
       Generate Radiance
     </button>
@@ -209,12 +241,26 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      const LENS_CATALOG = [
+        { operator: "FORGE", lens: "Mirror of Becoming" },
+        { operator: "ERODE", lens: "Ecliptic Memory" },
+        { operator: "COLLIDE", lens: "Catalyst Loop" },
+        { operator: "BIND", lens: "Harmonic Lattice" },
+        { operator: "DIFFUSE", lens: "Prism Current" },
+        { operator: "CONTAIN", lens: "Obsidian Threshold" },
+        { operator: "TRANSMUTE", lens: "Alchemical Crucible" },
+        { operator: "ASCEND", lens: "Celestial Astrolabe" }
+      ];
+
       const tier1 = localStorage.getItem("summary_1") || "No result found.";
       const tier2 = localStorage.getItem("summary_2") || "No result found.";
       let tier3 = localStorage.getItem("summary_3") || "No result found.";
       const radianceText = (localStorage.getItem("radiance") || "").trim();
-      const radianceLens = localStorage.getItem("radiance_lens") || "Mirror of Becoming";
-      const primaryOperator = localStorage.getItem("primary_operator") || "FORGE";
+      const autoLens = localStorage.getItem("radiance_lens") || "Mirror of Becoming";
+      const autoOperator = localStorage.getItem("primary_operator") || "FORGE";
+
+      let selectedLens = autoLens;
+      let selectedOperator = autoOperator;
 
       if (tier3 === "[object Object]" || (typeof tier3 === 'string' && tier3.includes("[object Object]"))) {
         tier3 = "Synthesis complete. Exploring deeper implications...";
@@ -225,14 +271,52 @@
       document.getElementById('tier3').textContent = tier3;
 
       const lensBadge = document.getElementById("active-lens-badge");
-      if (lensBadge) {
-        lensBadge.textContent = `${primaryOperator} • ${radianceLens}`;
+      const lensInline = document.getElementById("lens-label-inline");
+      const lensSelector = document.getElementById("lens-selector");
+
+      function updateLensDisplay() {
+        if (lensBadge) {
+          lensBadge.textContent = `${selectedOperator} • ${selectedLens}`;
+        }
       }
 
-      const lensInline = document.getElementById("lens-label-inline");
       if (lensInline) {
-        lensInline.textContent = `${primaryOperator} → ${radianceLens}`;
+        lensInline.textContent = `${autoOperator} → ${autoLens}`;
       }
+
+      if (lensSelector) {
+        const hasAutoInCatalog = LENS_CATALOG.some(item => item.lens === autoLens);
+        if (!hasAutoInCatalog) {
+          const customOpt = document.createElement("option");
+          customOpt.value = JSON.stringify({ operator: autoOperator, lens: autoLens });
+          customOpt.textContent = `${autoOperator} — ${autoLens} (Auto-Matched)`;
+          lensSelector.appendChild(customOpt);
+        }
+
+        LENS_CATALOG.forEach(item => {
+          const opt = document.createElement("option");
+          opt.value = JSON.stringify(item);
+          const isAuto = item.lens === autoLens;
+          opt.textContent = isAuto
+            ? `${item.operator} — ${item.lens} (Auto-Matched)`
+            : `${item.operator} — ${item.lens}`;
+          if (isAuto) opt.selected = true;
+          lensSelector.appendChild(opt);
+        });
+
+        lensSelector.addEventListener("change", (e) => {
+          try {
+            const chosen = JSON.parse(e.target.value);
+            selectedOperator = chosen.operator;
+            selectedLens = chosen.lens;
+            updateLensDisplay();
+          } catch (err) {
+            console.error("Lens selection parse error:", err);
+          }
+        });
+      }
+
+      updateLensDisplay();
 
       const poetryBox = document.getElementById("radiance-poetry-box");
       const poetryTextEl = document.getElementById("radiance-poetry-text");
@@ -339,7 +423,7 @@
         const prompt = tier3;
 
         radianceBtn.disabled = true;
-        radianceBtn.textContent = "Painting Vision...";
+        radianceBtn.textContent = `Painting via ${selectedLens}...`;
         loadingDiv.style.display = "block";
         container.innerHTML = "";
 
@@ -349,8 +433,8 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               prompt,
-              radiance_lens: radianceLens,
-              primary_operator: primaryOperator
+              radiance_lens: selectedLens,
+              primary_operator: selectedOperator
             })
           });
 
@@ -360,7 +444,7 @@
           const imageUrl = data.image_url;
 
           container.innerHTML = `
-            <img src="${imageUrl}" alt="Radiance Visual Synthesis" 
+            <img src="${imageUrl}" alt="Radiance Visual Synthesis (${selectedLens})" 
                  style="max-width:100%; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);" />
             <div style="margin-top: 12px;">
               <a href="${imageUrl}" download="context-finder-radiance.png" target="_blank" rel="noopener" class="secondary-button" style="text-decoration: none; display: inline-block;">
