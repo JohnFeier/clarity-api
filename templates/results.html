@@ -111,6 +111,27 @@
       margin: 0 0 14px 0;
     }
 
+    .radiance-poetry-box {
+      display: none;
+      text-align: left;
+      margin: 0 0 16px 0;
+      padding: 14px 16px;
+      border-radius: 8px;
+      background-color: rgba(0, 128, 128, 0.06);
+      border-left: 4px solid #008080;
+      color: #163030;
+      font-style: italic;
+      line-height: 1.6;
+      white-space: pre-line;
+    }
+
+    .radiance-poetry-footer {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 10px;
+      font-style: normal;
+    }
+
     .pulse-loading {
       display: none;
       margin-top: 18px;
@@ -161,10 +182,20 @@
 
   <div class="results-card" style="text-align: center;">
     <h2 class="stage-heading" style="text-align: left;">
-      Radiance • Visual Interpretation
-      <span id="active-lens-badge" style="float: right; font-size: 0.78rem; background: rgba(0,128,128,0.12); padding: 2px 8px; border-radius: 12px;"></span>
+      Radiance • Poetic &amp; Visual Interpretation
+      <span id="active-lens-badge" title="Active conceptual force and matched Radiance aesthetic lens" style="float: right; font-size: 0.78rem; background: rgba(0,128,128,0.12); padding: 2px 8px; border-radius: 12px; cursor: help;"></span>
     </h2>
-    <p class="radiance-subtext">Let Radiance paint a visual scene through her operator-matched interpretive lens.</p>
+
+    <div id="radiance-poetry-box" class="radiance-poetry-box">
+      <div id="radiance-poetry-text"></div>
+      <div class="radiance-poetry-footer">
+        <button type="button" id="copy-radiance-btn" class="secondary-button" style="padding: 0.35rem 0.75rem; font-size: 0.82rem;">
+          Copy Reflection
+        </button>
+      </div>
+    </div>
+
+    <p class="radiance-subtext">Matched to this triad’s driving force (<strong id="lens-label-inline">Mirror of Becoming</strong>). Generate a visual scene below.</p>
     <button id="radiance-btn" class="back-button" style="margin-top: 0; width: 100%;">
       Generate Radiance
     </button>
@@ -181,6 +212,7 @@
       const tier1 = localStorage.getItem("summary_1") || "No result found.";
       const tier2 = localStorage.getItem("summary_2") || "No result found.";
       let tier3 = localStorage.getItem("summary_3") || "No result found.";
+      const radianceText = (localStorage.getItem("radiance") || "").trim();
       const radianceLens = localStorage.getItem("radiance_lens") || "Mirror of Becoming";
       const primaryOperator = localStorage.getItem("primary_operator") || "FORGE";
 
@@ -195,6 +227,32 @@
       const lensBadge = document.getElementById("active-lens-badge");
       if (lensBadge) {
         lensBadge.textContent = `${primaryOperator} • ${radianceLens}`;
+      }
+
+      const lensInline = document.getElementById("lens-label-inline");
+      if (lensInline) {
+        lensInline.textContent = `${primaryOperator} → ${radianceLens}`;
+      }
+
+      const poetryBox = document.getElementById("radiance-poetry-box");
+      const poetryTextEl = document.getElementById("radiance-poetry-text");
+      const copyRadianceBtn = document.getElementById("copy-radiance-btn");
+
+      if (radianceText && poetryBox && poetryTextEl) {
+        poetryTextEl.textContent = radianceText;
+        poetryBox.style.display = "block";
+      }
+
+      if (copyRadianceBtn) {
+        copyRadianceBtn.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(radianceText);
+            copyRadianceBtn.textContent = "Copied!";
+            setTimeout(() => { copyRadianceBtn.textContent = "Copy Reflection"; }, 2000);
+          } catch (err) {
+            copyRadianceBtn.textContent = "Copy failed";
+          }
+        });
       }
 
       const radianceBtn = document.getElementById("radiance-btn");
