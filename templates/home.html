@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Enter your nouns to find clarity through our specialized processing engine.">
-    <title>Enter Your Nouns - Clarity</title>
+    <title>Enter Your Nouns - Context Finder</title>
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -30,6 +30,40 @@
         clip: rect(0, 0, 0, 0);
         border: 0;
       }
+      .primary-action-row {
+        display: flex;
+        gap: 10px;
+        align-items: stretch;
+        margin-top: 0.75rem;
+      }
+      .primary-action-row #activation-button {
+        flex: 1;
+        margin-top: 0;
+      }
+      .clear-triad-btn {
+        background: transparent;
+        color: #005f5f;
+        border: 1.5px solid #008080;
+        padding: 0 1.1rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+      }
+      .clear-triad-btn:hover {
+        background-color: rgba(0, 128, 128, 0.1);
+      }
+      .clear-triad-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .shortcut-hint {
+        margin-top: 0.65rem;
+        font-size: 0.8rem;
+        color: #2c4a4a;
+        text-align: center;
+      }
       #suggested-nouns {
         min-height: 200px;
         margin-top: 2rem;
@@ -43,6 +77,7 @@
         justify-content: center;
         gap: 15px;
         margin: 1rem 0;
+        flex-wrap: wrap;
       }
       #suggested-noun-list li {
         background: #fff;
@@ -61,18 +96,23 @@
 
         <div class="input-field">
             <label for="noun1" class="sr-only">First Noun</label>
-            <input type="text" id="noun1" placeholder="First noun" />
+            <input type="text" id="noun1" placeholder="First noun" autocomplete="off" />
         </div>
         <div class="input-field">
             <label for="noun2" class="sr-only">Second Noun</label>
-            <input type="text" id="noun2" placeholder="Second noun" />
+            <input type="text" id="noun2" placeholder="Second noun" autocomplete="off" />
         </div>
         <div class="input-field">
             <label for="noun3" class="sr-only">Third Noun</label>
-            <input type="text" id="noun3" placeholder="Third noun" />
+            <input type="text" id="noun3" placeholder="Third noun" autocomplete="off" />
         </div>
 
-        <button id="activation-button" type="button">Find Clarity</button>
+        <div class="primary-action-row">
+            <button id="activation-button" type="button">Find Clarity</button>
+            <button id="clear-button" type="button" class="clear-triad-btn" title="Clear all three nouns (Esc)">Clear</button>
+        </div>
+
+        <p class="shortcut-hint">Press <strong>Enter</strong> to step through nouns &amp; submit • <strong>Esc</strong> to clear</p>
 
         <p id="loadingMessage" aria-live="polite" style="display: none; margin-top: 1rem; font-style: italic; text-align: center;">
             Finding your Clarity...
@@ -119,29 +159,67 @@
         document.getElementById("noun1").value = currentSuggestedSet.nouns[0] || "";
         document.getElementById("noun2").value = currentSuggestedSet.nouns[1] || "";
         document.getElementById("noun3").value = currentSuggestedSet.nouns[2] || "";
+        document.getElementById("noun3").focus();
       }
 
       document.addEventListener("DOMContentLoaded", () => {
-        const params = new URLSearchParams(window.location.search);
-        if (params.get("w1")) document.getElementById("noun1").value = params.get("w1");
-        if (params.get("w2")) document.getElementById("noun2").value = params.get("w2");
-        if (params.get("w3")) document.getElementById("noun3").value = params.get("w3");
-
+        const n1 = document.getElementById("noun1");
+        const n2 = document.getElementById("noun2");
+        const n3 = document.getElementById("noun3");
+        const inputs = [n1, n2, n3];
         const activationBtn = document.getElementById("activation-button");
+        const clearBtn = document.getElementById("clear-button");
         const loading = document.getElementById("loadingMessage");
 
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("w1")) n1.value = params.get("w1");
+        if (params.get("w2")) n2.value = params.get("w2");
+        if (params.get("w3")) n3.value = params.get("w3");
+
+        function resetTriad() {
+          if (activationBtn.disabled) return;
+          inputs.forEach(inp => { inp.value = ""; });
+          if (window.location.search) {
+            window.history.replaceState(null, "", "/home");
+          }
+          n1.focus();
+        }
+
+        clearBtn.addEventListener("click", resetTriad);
+
+        inputs.forEach((inp, idx) => {
+          inp.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+              e.preventDefault();
+              resetTriad();
+              return;
+            }
+            if (e.key === "Enter") {
+              e.preventDefault();
+              if (e.ctrlKey || e.metaKey || idx === inputs.length - 1) {
+                activationBtn.click();
+              } else {
+                inputs[idx + 1].focus();
+              }
+            }
+          });
+        });
+
         activationBtn.addEventListener("click", async () => {
-          const noun1 = document.getElementById('noun1').value.trim();
-          const noun2 = document.getElementById('noun2').value.trim();
-          const noun3 = document.getElementById('noun3').value.trim();
+          const noun1 = n1.value.trim();
+          const noun2 = n2.value.trim();
+          const noun3 = n3.value.trim();
 
           const variables = [noun1, noun2, noun3].filter(Boolean);
           if (variables.length < 3) {
             alert('Clarity requires three nouns to run the logic funnel.');
+            const firstEmpty = inputs.find(inp => !inp.value.trim());
+            if (firstEmpty) firstEmpty.focus();
             return;
           }
 
           activationBtn.disabled = true;
+          clearBtn.disabled = true;
           loading.style.display = "block";
 
           try {
@@ -186,11 +264,15 @@
             alert(`Error: ${error.message}. Please try again.`);
           } finally {
             activationBtn.disabled = false;
+            clearBtn.disabled = false;
             loading.style.display = "none";
           }
         });
 
         displaySuggestedSet();
+
+        const firstEmptyOnLoad = inputs.find(inp => !inp.value.trim()) || n3;
+        firstEmptyOnLoad.focus();
       });
     </script>
 </body>
